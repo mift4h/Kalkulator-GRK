@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalkulator GRK Indonesia</title>
+<meta name="description" content="Kalkulator inventarisasi emisi gas rumah kaca (Cakupan 1, 2, 3) berbasis IPCC, GHG Protocol, ISO 14064-1 dan faktor emisi resmi Indonesia.">
+<meta name="theme-color" content="#16191c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: instrumen kerja yang tenang dan tepat — seperti panel ukur di ruang kendali, bukan brosur hijau.
+   IDEA: papan pembacaan (readout) emisi: satu angka total besar, strip cakupan di bawahnya.
+   PICTURE: angka total ton CO2e yang hidup + batang bertumpuk Cakupan 1/2/3 di panel baja kiri.
+   COLOUR and TYPE: baja #d5dbe0, hitam, putih, merah alarm #e8251a; malam #16191c. Inter Tight 600 + Inter.
+   LAYOUT: panel pembacaan 40% kiri (lengket), formulir di kanan; di ponsel panel di atas + bilah total di bawah. */
+:root{color-scheme:light dark;
+ --bg:light-dark(#ffffff,#16191c);--panel:light-dark(#d5dbe0,#21272c);--ink:light-dark(#0d0f10,#eef1f3);
+ --mute:light-dark(#4b545c,#a6b0b9);--line:light-dark(#bcc4cb,#363e45);--field:light-dark(#f3f5f6,#1b2024);
+ --red:light-dark(#d81f15,#ff5a4c);--s3:light-dark(#7b8792,#8f9ba6);--ok:light-dark(#0d0f10,#eef1f3)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:clip}
+h1,h2,h3,.big{font-family:"Inter Tight",Inter,system-ui,sans-serif;font-weight:600;line-height:1.05;text-wrap:balance;margin:0}
+h2{font-size:clamp(26px,3vw,34px);margin-bottom:6px}
+h3{font-size:19px;margin:0 0 4px}
+p{margin:.4em 0}
+a{color:inherit;text-underline-offset:3px}
+.mute{color:var(--mute)}
+small,.small{font-size:13px}
+.app{display:grid;grid-template-columns:minmax(300px,40%) minmax(0,1fr);min-height:100vh}
+/* ---------- panel pembacaan ---------- */
+.read{background:var(--panel);position:sticky;top:0;height:100vh;overflow:auto;padding:28px clamp(18px,3vw,44px) 32px;display:flex;flex-direction:column;gap:18px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600}
+.brand svg{flex:none}
+.who{font-size:14px;color:var(--mute)}
+.big{font-size:clamp(56px,8.4vw,120px);font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:.95}
+.unit{font-size:18px;font-weight:500;margin-top:6px}
+.stack-bar{display:flex;height:22px;background:var(--bg);border-radius:3px;overflow:hidden}
+.stack-bar i{display:block;height:100%;transition:width .5s ease}
+.c1{background:var(--ink)}.c2{background:var(--red)}.c3{background:var(--s3)}
+.strip{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:4px 10px;align-items:baseline;padding:10px 0;border-top:1px solid var(--line)}
+.strip .sw{width:12px;height:12px;border-radius:2px;align-self:center}
+.strip b{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.strip .sub{grid-column:2/4;font-size:13px;color:var(--mute)}
+.gas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.gas div{background:var(--bg);padding:8px 10px;border-radius:3px}
+.gas span{display:block;font-size:13px;color:var(--mute)}
+.gas b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.memo{font-size:13px;color:var(--mute);border-left:3px solid var(--red);padding-left:10px}
+/* ---------- utama ---------- */
+main{padding:0 clamp(16px,3.4vw,52px) 90px}
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);padding-top:14px;scrollbar-width:none}
+nav.tabs button{flex:none;font:inherit;font-size:15px;font-weight:500;background:none;border:0;border-bottom:3px solid transparent;color:var(--mute);padding:10px 12px;min-height:44px;cursor:pointer}
+nav.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--red)}
+section.pane{display:none;padding-top:26px}section.pane.on{display:block}
+.card{border-top:2px solid var(--ink);padding:16px 0 22px;margin-top:10px}
+.card>header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.card>header p{flex:1 1 320px;margin:0;font-size:14px;color:var(--mute)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.fields{display:flex;flex-wrap:wrap;gap:10px 12px}
+.f{display:flex;flex-direction:column;gap:3px;flex:1 1 130px}
+.f.w2{flex:2 1 220px}.f.w0{flex:0 1 150px}
+.f>span{font-size:13px;color:var(--mute)}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:4px;padding:9px 10px;min-height:44px;width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--red);outline-offset:1px}
+input[type=checkbox]{width:22px;min-height:22px;accent-color:var(--red)}
+.out{text-align:right;min-width:120px}
+.out b{display:block;font-family:"Inter Tight",sans-serif;font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.out small{display:block;color:var(--mute);white-space:nowrap}
+.btn{font:inherit;font-size:15px;font-weight:600;min-height:44px;padding:9px 16px;border-radius:4px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.del{background:transparent;border-color:var(--line);color:var(--mute);font-weight:500;padding:6px 10px;min-height:36px;margin-top:8px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.empty{color:var(--mute);font-size:14px;padding:10px 0}
+.note{background:var(--field);border-left:3px solid var(--red);padding:12px 14px;font-size:14px;margin:14px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px 16px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 18px}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:13px;color:var(--mute)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:600;border-top:2px solid var(--ink)}
+.scroll{overflow-x:auto}
+.banner{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:4px;margin-top:18px;font-size:14px}
+.banner .btn{background:var(--bg);color:var(--ink);border-color:var(--bg);min-height:36px;padding:5px 12px}
+.law li{margin-bottom:10px}
+.bottom{display:none}
+.modal{position:fixed;inset:0;background:rgb(0 0 0/.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal.on{display:flex}
+.modal>div{background:var(--bg);max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:20px;border-radius:6px}
+.modal textarea{height:44vh;font:13px/1.4 ui-monospace,Menlo,Consolas,monospace}
+@media(max-width:900px){
+ .app{grid-template-columns:1fr}
+ .read{position:static;height:auto;padding-top:20px}
+ .bottom{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--ink);color:var(--bg);padding:10px 16px calc(10px + env(safe-area-inset-bottom));justify-content:space-between;align-items:baseline;font-weight:600}
+ .bottom b{font-family:"Inter Tight",sans-serif;font-size:20px;font-variant-numeric:tabular-nums}
+}
+@media(max-width:600px){
+ .row{grid-template-columns:1fr}.out{text-align:left}
+ .gas{grid-template-columns:repeat(2,minmax(0,1fr))}
+ table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}
+ .stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8.5em;text-align:start}
+ .stack td::before{content:attr(data-l);float:inline-start;width:8em;margin-inline-start:-8.5em;color:var(--mute);white-space:normal}
+ .stack td:empty{display:none}.stack tfoot tr{border-top:2px solid var(--ink)}
+}
+@media(prefers-reduced-motion:reduce){.stack-bar i{transition:none}}
+@media print{
+ .read,nav.tabs,.bottom,.btns,.banner,.noprint{display:none!important}
+ .app{display:block}main{padding:0}section.pane{display:none!important}section#p-hasil{display:block!important}
+ body{background:#fff;color:#000;font-size:12px}
+}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;const t=c.closest('table'),h=t&&t.tHead&&t.tHead.rows[0];c.dataset.l=h&&h.cells[i]?h.cells[i].textContent:''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<div class="app">
+<aside class="read" aria-live="polite">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="currentColor"/><path d="M6 22a10 10 0 0 1 20 0" fill="none" stroke="#e8251a" stroke-width="3" stroke-linecap="round"/><path d="M16 22l5-7" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+    <span>Kalkulator GRK</span>
+  </div>
+  <div>
+    <div class="who" id="who">Total emisi</div>
+    <div class="big" id="total">0</div>
+    <div class="unit">ton CO₂e <span class="mute small" id="basis"></span></div>
+  </div>
+  <div class="stack-bar" role="img" id="sbar" aria-label="Porsi cakupan"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div>
+  <div id="strips"></div>
+  <div class="gas" id="gas"></div>
+  <div id="memo"></div>
+</aside>
+
+<main>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="profil">Profil</button>
+    <button role="tab" data-tab="s1">Cakupan 1</button>
+    <button role="tab" data-tab="s2">Cakupan 2</button>
+    <button role="tab" data-tab="s3">Cakupan 3</button>
+    <button role="tab" data-tab="hasil">Hasil &amp; laporan</button>
+    <button role="tab" data-tab="metode">Faktor &amp; dasar hukum</button>
+  </nav>
+  <div id="sampleBanner"></div>
+
+  <section class="pane" id="p-profil">
+    <h2>Profil inventarisasi</h2>
+    <p class="mute">Tentukan organisasi, tahun pelaporan, batas organisasi, dan pilihan metode. Pilihan ini memengaruhi semua perhitungan.</p>
+    <div class="card"><header><h3>Organisasi</h3></header>
+      <div class="grid2" id="orgFields"></div>
+    </div>
+    <div class="card"><header><h3>Metode</h3><p>Nilai bawaan sudah sesuai praktik inventarisasi nasional. Ubah hanya bila ada alasan.</p></header>
+      <div class="grid2" id="optFields"></div>
+    </div>
+  </section>
+
+  <section class="pane" id="p-s1">
+    <h2>Cakupan 1 · emisi langsung</h2>
+    <p class="mute">Sumber yang dimiliki atau dikendalikan organisasi. Isi data setahun penuh, misalnya dari nota BBM, faktur gas, atau catatan servis AC.</p>
+    <div class="card" id="c-stat"></div>
+    <div class="card" id="c-mob"></div>
+    <div class="card" id="c-ref"></div>
+    <div class="card" id="c-agri"></div>
+  </section>
+
+  <section class="pane" id="p-s2">
+    <h2>Cakupan 2 · listrik yang dibeli</h2>
+    <p class="mute">Masukkan konsumsi listrik per sistem jaringan PLN. Ambil kWh dari tagihan atau aplikasi PLN Mobile, lalu jumlahkan 12 bulan.</p>
+    <div class="card" id="c-elec"></div>
+  </section>
+
+  <section class="pane" id="p-s3">
+    <h2>Cakupan 3 · rantai nilai</h2>
+    <p class="mute">Opsional. Masukkan data aktivitas beserta faktor emisi dari sumber yang dapat dirujuk, misalnya pemasok, studi LCA, atau basis data faktor emisi. Cantumkan sumbernya.</p>
+    <div class="card" id="c-s3"></div>
+  </section>
+
+  <section class="pane" id="p-hasil"><div id="hasil"></div></section>
+  <section class="pane" id="p-metode"><div id="metode"></div></section>
+</main>
+</div>
+<div class="bottom" aria-hidden="true"><span>Total</span><span><b id="btotal">0</b> t CO₂e</span></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div>
+  <h3 id="mTitle">Ekspor</h3><p class="small mute" id="mNote"></p>
+  <textarea id="mText" readonly></textarea>
+  <div class="btns"><button class="btn" id="mCopy">Salin</button><button class="btn ghost" id="mClose">Tutup</button><span class="small mute" id="mMsg"></span></div>
+</div></div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+
+<script>
+/* ================================================================
+   MESIN HITUNG GRK  —  murni (tanpa DOM), dapat diuji di Node.
+   Rumus umum: Emisi = Data Aktivitas × Faktor Emisi × GWP
+   Sumber faktor: IPCC 2006 GL (Vol.2 Energi, Vol.3 IPPU, Vol.4 AFOLU)
+   + 2019 Refinement; ESDM (grid 2019, Kepmen 163.K/HK.02/MEM.S/2021);
+   GWP: IPCC AR5 / AR6 (tabel GHG Protocol, Agustus 2024).
+   ================================================================ */
+var GRK = (function () {
+  'use strict';
+
+  /* ---------- GWP 100 tahun ---------- */
+  var GWP = {
+    AR5: { CH4_f: 28, CH4_nf: 28, N2O: 265, 'HFC-32': 677, 'HFC-125': 3170, 'HFC-134a': 1300, 'HFC-143a': 4800, SF6: 23500, 'HCFC-22': 1760 },
+    AR6: { CH4_f: 29.8, CH4_nf: 27.0, N2O: 273, 'HFC-32': 771, 'HFC-125': 3740, 'HFC-134a': 1530, 'HFC-143a': 5810, SF6: 25200, 'HCFC-22': 1960 }
+  };
+
+  /* ---------- Bahan bakar (IPCC 2006 Vol.2 Tabel 1.2, 1.4, 2.3, 2.4, 3.2.1, 3.2.2) ----------
+     ncv  : TJ/Gg       co2 : kg CO2/TJ
+     ind  : [CH4, N2O] kg/TJ stasioner industri/manufaktur (Tabel 2.3)
+     com  : [CH4, N2O] kg/TJ stasioner komersial/institusi/rumah tangga (Tabel 2.4–2.5)
+     mob  : [CH4, N2O] kg/TJ transportasi jalan (Tabel 3.2.2, default)
+     rho  : kg/L (nilai tipikal; ganti dengan CoA pemasok bila ada)
+     bio  : CO2 biogenik (dilaporkan terpisah, di luar cakupan)             */
+  var FUELS = {
+    diesel:   { nama: 'Solar / Biosolar (minyak solar)', ncv: 43.0, co2: 74100, ind: [3, 0.6], com: [10, 0.6], mob: [3.9, 3.9], rho: 0.84, blend: 'fame', units: ['L', 'kL', 'kg', 't'] },
+    gasoline: { nama: 'Bensin (Pertalite/Pertamax)',    ncv: 44.3, co2: 69300, ind: [3, 0.6], com: [10, 0.6], mob: [33, 3.2], rho: 0.74, blend: 'etanol', units: ['L', 'kL', 'kg', 't'] },
+    kerosene: { nama: 'Minyak tanah',                    ncv: 43.8, co2: 71900, ind: [3, 0.6], com: [10, 0.6], mob: null, rho: 0.80, units: ['L', 'kL', 'kg', 't'] },
+    mfo:      { nama: 'Minyak bakar (MFO/residu)',       ncv: 40.4, co2: 77400, ind: [3, 0.6], com: [10, 0.6], mob: null, rho: 0.97, units: ['L', 'kL', 'kg', 't'] },
+    lpg:      { nama: 'LPG',                             ncv: 47.3, co2: 63100, ind: [1, 0.1], com: [5, 0.1],  mob: [62, 0.2], rho: null, units: ['kg', 't', 'tb3', 'tb5', 'tb12', 'tb50'] },
+    ng:       { nama: 'Gas bumi / CNG',                  ncv: 48.0, co2: 56100, ind: [1, 0.1], com: [5, 0.1],  mob: [92, 3],   rho: null, units: ['MMBTU', 'GJ', 'kg', 't'] },
+    coal:     { nama: 'Batubara sub-bituminus',          ncv: 18.9, co2: 96100, ind: [10, 1.5], com: [10, 1.5], mob: null, rho: null, units: ['t', 'kg'], ncvEdit: true },
+    coalbit:  { nama: 'Batubara bituminus',              ncv: 25.8, co2: 94600, ind: [10, 1.5], com: [10, 1.5], mob: null, rho: null, units: ['t', 'kg'], ncvEdit: true },
+    lignite:  { nama: 'Lignit',                          ncv: 11.9, co2: 101000, ind: [10, 1.5], com: [10, 1.5], mob: null, rho: null, units: ['t', 'kg'], ncvEdit: true },
+    wood:     { nama: 'Kayu bakar (biomassa)',           ncv: 15.6, co2: 112000, ind: [30, 4], com: [300, 4], mob: null, rho: null, bio: true, units: ['t', 'kg'], ncvEdit: true },
+    biomass:  { nama: 'Biomassa padat lain (cangkang, fiber, sekam)', ncv: 11.6, co2: 100000, ind: [30, 4], com: [300, 4], mob: null, rho: null, bio: true, units: ['t', 'kg'], ncvEdit: true }
+  };
+  /* Komponen nabati dalam campuran */
+  var FAME = { nama: 'Biodiesel (FAME)', ncv: 27.0, co2: 70800, rho: 0.88 };   // IPCC "Biodiesels"
+  var ETANOL = { nama: 'Bioetanol', ncv: 27.0, co2: 70800, rho: 0.789 };      // IPCC "Biogasoline"
+
+  var UNIT_LABEL = { L: 'liter', kL: 'kiloliter', kg: 'kg', t: 'ton', MMBTU: 'MMBTU (GCV)', GJ: 'GJ (NCV)', tb3: 'tabung 3 kg', tb5: 'tabung 5,5 kg', tb12: 'tabung 12 kg', tb50: 'tabung 50 kg', kWh: 'kWh', MWh: 'MWh' };
+  var TABUNG = { tb3: 3, tb5: 5.5, tb12: 12, tb50: 50 };
+
+  /* ---------- Faktor emisi grid PLN — ESDM, data 2019 (Kepmen ESDM 163.K/HK.02/MEM.S/2021)
+     om = Operating Margin, cm = Combined Margin ex-post (umum), tCO2/MWh ---------- */
+  var GRID = [
+    { id: 'jamali', nama: 'Jawa-Madura-Bali', om: 0.80, cm: 0.87 },
+    { id: 'sumatera', nama: 'Sumatera (interkoneksi)', om: 0.77, cm: 0.94 },
+    { id: 'batam', nama: 'Batam-Tanjung Pinang', om: 0.76, cm: 0.82 },
+    { id: 'bangka', nama: 'Bangka', om: 1.04, cm: 0.89 },
+    { id: 'belitung', nama: 'Belitung', om: 1.40, cm: 1.41 },
+    { id: 'khatulistiwa', nama: 'Khatulistiwa (Kalbar)', om: 1.67, cm: 1.63 },
+    { id: 'barito', nama: 'Barito (Kalsel-Kalteng)', om: 1.20, cm: 1.31 },
+    { id: 'mahakam', nama: 'Mahakam (Kaltim)', om: 1.12, cm: 1.14 },
+    { id: 'tarakan', nama: 'Tarakan (Kaltara)', om: 0.29, cm: 0.48 },
+    { id: 'sulselbar', nama: 'Sulselbar', om: 0.73, cm: 0.95 },
+    { id: 'sulutgo', nama: 'Sulutgo', om: 0.67, cm: 0.78 },
+    { id: 'kendari', nama: 'Kendari (Sultra)', om: 0.87, cm: 1.02 },
+    { id: 'palu', nama: 'Palapas-Palu (Sulteng)', om: 0.54, cm: 0.54 },
+    { id: 'lombok', nama: 'Lombok (NTB)', om: 1.27, cm: 1.61 },
+    { id: 'timor', nama: 'Timor (NTT)', om: 0.79, cm: 0.69 },
+    { id: 'ambon', nama: 'Ambon (Maluku)', om: 0.65, cm: 0.66 },
+    { id: 'jayapura', nama: 'Jayapura (Papua)', om: 0.50, cm: 0.51 },
+    { id: 'sorong', nama: 'Sorong (Papua Barat Daya)', om: 0.56, cm: 0.56 },
+    { id: 'timika', nama: 'Timika (Papua Tengah)', om: 0.57, cm: 0.57 },
+    { id: 'custom', nama: 'Faktor sendiri (mis. dari PLN/ESDM terbaru)', om: null, cm: null }
+  ];
+
+  /* ---------- Refrigeran (komposisi massa; GWP dihitung dari komponen) ---------- */
+  var REFRIG = {
+    'R-32':   { nama: 'R-32 (HFC-32)', comp: { 'HFC-32': 1 } },
+    'R-410A': { nama: 'R-410A', comp: { 'HFC-32': 0.5, 'HFC-125': 0.5 } },
+    'R-134a': { nama: 'R-134a (HFC-134a)', comp: { 'HFC-134a': 1 } },
+    'R-407C': { nama: 'R-407C', comp: { 'HFC-32': 0.23, 'HFC-125': 0.25, 'HFC-134a': 0.52 } },
+    'R-404A': { nama: 'R-404A', comp: { 'HFC-125': 0.44, 'HFC-143a': 0.52, 'HFC-134a': 0.04 } },
+    'SF6':    { nama: 'SF6 (switchgear)', comp: { SF6: 1 } },
+    'R-22':   { nama: 'R-22 (HCFC-22) — bukan gas Kyoto', comp: { 'HCFC-22': 1 }, memo: true }
+  };
+  /* Laju kebocoran operasi — IPCC 2006 Vol.3 Tabel 7.9, batas atas (konservatif) */
+  var EQUIP = {
+    ac: { nama: 'AC split/rumah & komersial', leak: 0.10 },
+    chiller: { nama: 'Chiller', leak: 0.15 },
+    kulkas: { nama: 'Kulkas rumah tangga', leak: 0.005 },
+    standalone: { nama: 'Showcase/freezer komersial mandiri', leak: 0.15 },
+    komersial: { nama: 'Refrigerasi komersial menengah-besar', leak: 0.35 },
+    industri: { nama: 'Refrigerasi industri (cold storage)', leak: 0.25 },
+    transport: { nama: 'Refrigerasi transportasi (truk/kontainer)', leak: 0.50 },
+    mobil: { nama: 'AC kendaraan', leak: 0.20 },
+    switchgear: { nama: 'Switchgear SF6 (isi sendiri tingkat bocor)', leak: 0.01 }
+  };
+
+  /* ---------- Pertanian: N2O tanah, urea, kapur ---------- */
+  var N2O_SET = {
+    ipcc2019: { nama: 'IPCC 2019 Refinement — iklim basah (disagregasi)', EF1s: 0.016, EF1o: 0.006, EF4: 0.014, EF5: 0.011, GASF: 0.11, GASM: 0.21, LEACH: 0.24 },
+    ipcc2006: { nama: 'IPCC 2006 — default agregat', EF1s: 0.010, EF1o: 0.010, EF4: 0.010, EF5: 0.0075, GASF: 0.10, GASM: 0.20, LEACH: 0.30 }
+  };
+  var PUPUK = {
+    urea: { nama: 'Urea (46% N)', N: 0.46, urea: true },
+    za: { nama: 'ZA / amonium sulfat (21% N)', N: 0.21 },
+    npk15: { nama: 'NPK 15-15-15 (15% N)', N: 0.15 },
+    npk16: { nama: 'NPK 16-16-16 (16% N)', N: 0.16 },
+    custom: { nama: 'Pupuk N lain (isi % N)', N: null }
+  };
+
+  var SCOPE3_CAT = ['1 Barang & jasa dibeli', '2 Barang modal', '3 Energi & bahan bakar (hulu)', '4 Transportasi & distribusi hulu', '5 Limbah operasional', '6 Perjalanan dinas', '7 Komuter karyawan', '8 Aset sewa hulu', '9 Transportasi & distribusi hilir', '10 Pengolahan produk terjual', '11 Penggunaan produk terjual', '12 Akhir masa pakai produk', '13 Aset sewa hilir', '14 Waralaba', '15 Investasi'];
+
+  /* Angka format Indonesia: "1.000,5" | "1000,5" | "1000.5" | "12.500" (titik = ribuan) */
+  function parseID(v) {
+    var s = String(v == null ? '' : v).trim().replace(/\s/g, '');
+    if (!s) return NaN;
+    if (s.indexOf(',') > -1 && s.indexOf('.') > -1) s = s.replace(/\./g, '').replace(',', '.');
+    else if (s.indexOf(',') > -1) s = s.replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    return parseFloat(s);
+  }
+  function num(v) { var n = parseID(v); return isFinite(n) && n > 0 ? n : 0; }
+  function zero() { return { co2: 0, ch4: 0, n2o: 0, fgas: 0, co2e: 0, bio: 0, memo: 0 }; }
+
+  /* Massa bahan bakar (kg) dari jumlah & satuan; energi langsung untuk gas */
+  function toKg(f, qty, unit, rho) {
+    if (unit === 'kg') return qty;
+    if (unit === 't') return qty * 1000;
+    if (unit === 'L') return qty * rho;
+    if (unit === 'kL') return qty * 1000 * rho;
+    if (TABUNG[unit]) return qty * TABUNG[unit];
+    return 0;
+  }
+
+  /* ---- Pembakaran bahan bakar (stasioner / bergerak) ---- */
+  function fuelLine(r, opt) {
+    var out = zero(), f = FUELS[r.fuel]; if (!f) return out;
+    var g = GWP[opt.gwp], mode = r.mode === 'mob' ? 'mob' : (opt.sektor === 'com' ? 'com' : 'ind');
+    var qty = num(r.qty);
+    if (r.mode === 'mob' && !qty && num(r.km) && num(r.kmpl)) qty = num(r.km) / num(r.kmpl); // km ÷ km/L
+    if (!qty) return out;
+    var unit = r.unit || f.units[0];
+    var efn = (mode === 'mob' ? f.mob : f[mode]) || f.ind;
+    var ncv = f.ncvEdit && num(r.ncv) ? num(r.ncv) : f.ncv;
+    var parts = []; // {tj, co2ef, bio}
+    if (unit === 'MMBTU') parts.push({ tj: qty * 1.055056e-3 * 0.9, co2: f.co2, bio: false }); // GCV→NCV = 0,9 (IPCC)
+    else if (unit === 'GJ') parts.push({ tj: qty / 1000, co2: f.co2, bio: false });
+    else {
+      var b = 0, comp = null;
+      if (f.blend === 'fame') { b = Math.min(Math.max(parseFloat(r.blend) || 0, 0), 100) / 100; comp = FAME; }
+      if (f.blend === 'etanol') { b = Math.min(Math.max(parseFloat(r.blend) || 0, 0), 100) / 100; comp = ETANOL; }
+      if (b > 0 && (unit === 'L' || unit === 'kL')) {          // campuran volume
+        var vol = unit === 'kL' ? qty * 1000 : qty;
+        parts.push({ tj: vol * (1 - b) * f.rho * ncv / 1e6, co2: f.co2, bio: false });
+        parts.push({ tj: vol * b * comp.rho * comp.ncv / 1e6, co2: comp.co2, bio: true });
+      } else if (b > 0) {                                       // campuran dalam massa: konversi via volume
+        var m = toKg(f, qty, unit, 1), v = m / ((1 - b) * f.rho + b * comp.rho);
+        parts.push({ tj: v * (1 - b) * f.rho * ncv / 1e6, co2: f.co2, bio: false });
+        parts.push({ tj: v * b * comp.rho * comp.ncv / 1e6, co2: comp.co2, bio: true });
+      } else {
+        parts.push({ tj: toKg(f, qty, unit, f.rho) * ncv / 1e6, co2: f.co2, bio: !!f.bio });
+      }
+    }
+    parts.forEach(function (p) {
+      if (p.bio) out.bio += p.tj * p.co2; else out.co2 += p.tj * p.co2;
+      var ch4 = p.tj * efn[0], n2o = p.tj * efn[1];
+      out.ch4 += ch4 * (p.bio ? g.CH4_nf : g.CH4_f);
+      out.n2o += n2o * g.N2O;
+    });
+    out.tj = parts.reduce(function (s, p) { return s + p.tj; }, 0);
+    return fin(out);
+  }
+
+  /* ---- Refrigeran & SF6 ---- */
+  function refrigGWP(gas, gwp) {
+    var c = REFRIG[gas].comp, g = GWP[gwp], s = 0;
+    for (var k in c) s += c[k] * g[k];
+    return s;
+  }
+  function refrigLine(r, opt) {
+    var out = zero(), R = REFRIG[r.gas]; if (!R) return out;
+    var kg = 0;
+    if (r.metode === 'screening') {
+      var lk = parseID(r.leak);
+      var leak = isFinite(lk) && lk >= 0 ? lk / 100 : (EQUIP[r.alat] || EQUIP.ac).leak;
+      kg = num(r.unit) * num(r.charge) * leak;
+    } else kg = num(r.kg);
+    var e = kg * refrigGWP(r.gas, opt.gwp);
+    if (R.memo) out.memo = e; else out.fgas = e;
+    out.kgGas = kg;
+    return fin(out);
+  }
+
+  /* ---- Pertanian ---- */
+  function agriLine(r, opt) {
+    var out = zero(), S = N2O_SET[opt.n2oSet] || N2O_SET.ipcc2019, g = GWP[opt.gwp];
+    var kg = num(r.kg), FSN = 0, FON = 0;
+    if (r.jenis === 'pupuk') {
+      var P = PUPUK[r.pupuk] || PUPUK.urea, nfrac = P.N === null ? num(r.npct) / 100 : P.N;
+      FSN = kg * nfrac;
+      if (P.urea) out.co2 += kg * 0.20 * 44 / 12;                         // IPCC Vol.4 Pers. 11.13
+    } else if (r.jenis === 'organik') {
+      FON = r.input === 'n' ? kg : kg * num(r.npct) / 100;
+    } else if (r.jenis === 'kapur') out.co2 += kg * 0.12 * 44 / 12;       // Pers. 11.12
+    else if (r.jenis === 'dolomit') out.co2 += kg * 0.13 * 44 / 12;
+    if (FSN || FON) {
+      var direct = FSN * S.EF1s + FON * S.EF1o;
+      var vol = opt.indirect === false ? 0 : (FSN * S.GASF + FON * S.GASM) * S.EF4;
+      var leach = opt.indirect === false ? 0 : (FSN + FON) * S.LEACH * S.EF5;
+      out.n2oKg = (direct + vol + leach) * 44 / 28;
+      out.n2o += out.n2oKg * g.N2O;
+      out.kgN = FSN + FON;
+    }
+    return fin(out);
+  }
+
+  /* ---- Listrik (cakupan 2) ---- */
+  function gridEF(r) {
+    if (r.grid === 'custom') return num(r.ef);
+    var G = GRID.filter(function (x) { return x.id === r.grid; })[0] || GRID[0];
+    return r.margin === 'om' ? G.om : G.cm;
+  }
+  function elecLine(r) {
+    var kwh = num(r.qty) * (r.unit === 'MWh' ? 1000 : 1), ef = gridEF(r);
+    var rec = Math.min(num(r.rec) * 1000, kwh);              // REC dalam MWh
+    var out = zero();
+    out.co2 = kwh * ef;                                      // kg (tCO2/MWh = kgCO2/kWh)
+    out.market = (kwh - rec) * ef;
+    out.kwh = kwh; out.ef = ef;
+    return fin(out);
+  }
+
+  /* ---- Cakupan 3 (faktor pengguna) ---- */
+  function s3Line(r) { var out = zero(); out.fgas = 0; out.other = num(r.qty) * num(r.ef); out.co2e = out.other; return out; }
+
+  function fin(o) { o.co2e = o.co2 + o.ch4 + o.n2o + o.fgas; return o; }
+
+  /* ---- Inventaris lengkap ---- */
+  function compute(st) {
+    var opt = st.opt, lines = [];
+    (st.stat || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Pembakaran stasioner', ref: ['stat', i], r: r, e: fuelLine(r, opt) }); });
+    (st.mob || []).forEach(function (r, i) { var rr = Object.assign({}, r, { mode: 'mob' }); lines.push({ s: 1, kat: 'Pembakaran bergerak', ref: ['mob', i], r: r, e: fuelLine(rr, opt) }); });
+    (st.ref || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Refrigeran & SF6 (fugitif)', ref: ['ref', i], r: r, e: refrigLine(r, opt) }); });
+    (st.agri || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Pertanian (pupuk, kapur)', ref: ['agri', i], r: r, e: agriLine(r, opt) }); });
+    (st.elec || []).forEach(function (r, i) { lines.push({ s: 2, kat: 'Listrik dibeli', ref: ['elec', i], r: r, e: elecLine(r) }); });
+    (st.s3 || []).forEach(function (r, i) { lines.push({ s: 3, kat: 'Cakupan 3 · ' + (r.cat || ''), ref: ['s3', i], r: r, e: s3Line(r) }); });
+    var T = { s1: 0, s2: 0, s2m: 0, s3: 0, co2: 0, ch4: 0, n2o: 0, fgas: 0, bio: 0, memo: 0, other: 0, kat: {} };
+    lines.forEach(function (l) {
+      var e = l.e;
+      T['s' + l.s] += e.co2e;
+      if (l.s === 2) T.s2m += e.market;
+      if (l.s !== 3) { T.co2 += e.co2; T.ch4 += e.ch4; T.n2o += e.n2o; T.fgas += e.fgas; } else T.other += e.co2e;
+      T.bio += e.bio; T.memo += e.memo;
+      T.kat[l.kat] = (T.kat[l.kat] || 0) + e.co2e;
+    });
+    T.total = T.s1 + T.s2 + T.s3; T.totalMarket = T.s1 + T.s2m + T.s3;
+    return { lines: lines, T: T };
+  }
+
+  return { GWP: GWP, FUELS: FUELS, FAME: FAME, ETANOL: ETANOL, GRID: GRID, REFRIG: REFRIG, EQUIP: EQUIP, N2O_SET: N2O_SET, PUPUK: PUPUK, SCOPE3_CAT: SCOPE3_CAT, UNIT_LABEL: UNIT_LABEL,
+    fuelLine: fuelLine, refrigLine: refrigLine, refrigGWP: refrigGWP, agriLine: agriLine, elecLine: elecLine, gridEF: gridEF, compute: compute, num: num, parseID: parseID };
+})();
+if (typeof module !== 'undefined') module.exports = GRK;
+
+</script>
+<script>
+{
+const E = GRK, KEY = 'grk-kalkulator-v1';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inFrame = (() => { try { return window.self !== window.top } catch (e) { return true } })();
+const nf = (v, d) => (isFinite(v) ? v : 0).toLocaleString('id-ID', {minimumFractionDigits: d, maximumFractionDigits: d});
+const tt = kg => { const t = kg / 1000, a = Math.abs(t); return nf(t, a === 0 ? 0 : a < 10 ? 3 : a < 1000 ? 2 : a < 100000 ? 1 : 0); };
+const blendFor = y => { y = +y; return y >= 2027 ? 50 : y === 2026 ? 45 : y === 2025 ? 40 : y >= 2023 ? 35 : y >= 2020 ? 30 : 20; };
+
+/* ---------- status ---------- */
+function blank() {
+  return { sample: false, org: { nama: '', tahun: String(new Date().getFullYear()), lokasi: '', batas: 'operasional', output: '', outUnit: '' },
+    opt: { gwp: 'AR5', sektor: 'ind', n2oSet: 'ipcc2019', indirect: true }, stat: [], mob: [], ref: [], agri: [], elec: [], s3: [] };
+}
+function sample() {
+  const s = blank();
+  Object.assign(s.org, { nama: 'CV Contoh Rempah Nusantara', tahun: '2026', lokasi: 'Bogor, Jawa Barat', output: '850', outUnit: 'ton produk' });
+  s.sample = true;
+  s.stat = [{ fuel: 'diesel', qty: '2.400', unit: 'L', blend: 45, ket: 'Genset cadangan' }, { fuel: 'lpg', qty: '96', unit: 'tb12', ket: 'Pengering & dapur' }, { fuel: 'biomass', qty: '35', unit: 't', ket: 'Tungku cangkang' }];
+  s.mob = [{ fuel: 'diesel', qty: '7.800', unit: 'L', blend: 45, ket: 'Truk angkut 2 unit' }, { fuel: 'gasoline', qty: '', unit: 'L', blend: 0, km: '18.000', kmpl: '35', ket: 'Motor kurir (data km)' }];
+  s.ref = [{ gas: 'R-32', metode: 'screening', alat: 'ac', unit: '8', charge: '0,9', leak: '', ket: 'AC kantor' }, { gas: 'R-404A', metode: 'isi', kg: '6', ket: 'Isi ulang cold storage' }];
+  s.agri = [{ jenis: 'pupuk', pupuk: 'npk15', kg: '1.200', ket: 'Kebun inti' }, { jenis: 'pupuk', pupuk: 'urea', kg: '400', ket: '' }, { jenis: 'dolomit', kg: '2.000', ket: '' }];
+  s.elec = [{ grid: 'jamali', margin: 'cm', qty: '142.000', unit: 'kWh', rec: '', ket: 'Pabrik & kantor' }];
+  s.s3 = [{ cat: E.SCOPE3_CAT[5], desc: 'Penerbangan domestik', qty: '24.000', satuan: 'penumpang-km', ef: '0,13552', sumber: 'DESNZ (UK) 2025, penerbangan domestik, tanpa RF' }];
+  return s;
+}
+let st = null;
+try { st = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+if (!st || !st.opt || !st.org) st = sample();
+let tab = 'profil';
+try { tab = localStorage.getItem(KEY + '-tab') || (st.sample ? 's1' : 'profil'); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+
+/* ---------- kontrol formulir ---------- */
+const opts = (list, v) => list.map(([k, l]) => `<option value="${esc(k)}"${String(k) === String(v) ? ' selected' : ''}>${esc(l)}</option>`).join('');
+const sel = (sec, i, k, v, list, lab, cls = '', rr = 1) => `<label class="f ${cls}"><span>${lab}</span><select data-sec="${sec}" data-i="${i}" data-k="${k}"${rr ? ' data-rr="1"' : ''}>${opts(list, v)}</select></label>`;
+const inp = (sec, i, k, v, lab, ph = '', cls = '', mode = 'decimal') => `<label class="f ${cls}"><span>${lab}</span><input data-sec="${sec}" data-i="${i}" data-k="${k}" value="${esc(v)}" placeholder="${esc(ph)}" inputmode="${mode}" autocomplete="off"></label>`;
+const txt = (sec, i, k, v, lab, ph = '', cls = 'w2') => inp(sec, i, k, v, lab, ph, cls, 'text');
+
+const FUEL_STAT = Object.keys(E.FUELS).map(k => [k, E.FUELS[k].nama]);
+const FUEL_MOB = Object.keys(E.FUELS).filter(k => E.FUELS[k].mob).map(k => [k, E.FUELS[k].nama]);
+const unitList = f => E.FUELS[f].units.map(u => [u, E.UNIT_LABEL[u]]);
+const BLEND_D = [[0, 'B0 (solar murni)'], [30, 'B30'], [35, 'B35'], [40, 'B40'], [45, 'B45 (rerata 2026)'], [50, 'B50 (sejak 1 Jul 2026)']];
+const BLEND_E = [[0, 'E0 (tanpa etanol)'], [5, 'E5']];
+
+const SEC = {
+  stat: { title: 'Pembakaran stasioner', help: 'Genset, boiler, tungku, oven, kompor, pengering. Faktor CH₄/N₂O mengikuti sektor di Profil.', add: 'Tambah bahan bakar',
+    row: r => ({ fuel: 'diesel', qty: '', unit: 'L', blend: blendFor(st.org.tahun), ket: '' }),
+    fields: (r, i) => { const f = E.FUELS[r.fuel] || E.FUELS.diesel; let h = sel('stat', i, 'fuel', r.fuel, FUEL_STAT, 'Bahan bakar', 'w2') + inp('stat', i, 'qty', r.qty, 'Jumlah setahun', '0') + sel('stat', i, 'unit', r.unit, unitList(r.fuel), 'Satuan', '', 0);
+      if (f.blend === 'fame') h += sel('stat', i, 'blend', r.blend, BLEND_D, 'Kadar biodiesel', '', 0);
+      if (f.blend === 'etanol') h += sel('stat', i, 'blend', r.blend, BLEND_E, 'Kadar etanol', '', 0);
+      if (f.ncvEdit) h += inp('stat', i, 'ncv', r.ncv, 'NCV (MJ/kg)', 'bawaan ' + nf(f.ncv, 1), 'w0');
+      return h + txt('stat', i, 'ket', r.ket, 'Keterangan', 'mis. genset gedung A'); } },
+  mob: { title: 'Pembakaran bergerak (kendaraan)', help: 'Kendaraan & alat berat milik sendiri. Pakai liter BBM bila ada; bila tidak, isi jarak (km) dan efisiensi (km/L).', add: 'Tambah kendaraan',
+    row: r => ({ fuel: 'diesel', qty: '', unit: 'L', blend: blendFor(st.org.tahun), km: '', kmpl: '', ket: '' }),
+    fields: (r, i) => { const f = E.FUELS[r.fuel] || E.FUELS.diesel; let h = sel('mob', i, 'fuel', r.fuel, FUEL_MOB, 'Bahan bakar', 'w2') + inp('mob', i, 'qty', r.qty, 'BBM setahun', 'kosongkan bila pakai km') + sel('mob', i, 'unit', r.unit, unitList(r.fuel), 'Satuan', '', 0);
+      if (f.blend === 'fame') h += sel('mob', i, 'blend', r.blend, BLEND_D, 'Kadar biodiesel', '', 0);
+      if (f.blend === 'etanol') h += sel('mob', i, 'blend', r.blend, BLEND_E, 'Kadar etanol', '', 0);
+      if (r.fuel === 'diesel' || r.fuel === 'gasoline') h += inp('mob', i, 'km', r.km, 'atau jarak (km)', '') + inp('mob', i, 'kmpl', r.kmpl, 'efisiensi (km/L)', '', 'w0');
+      return h + txt('mob', i, 'ket', r.ket, 'Keterangan', 'mis. truk B 1234 XY'); } },
+  ref: { title: 'Refrigeran & SF₆ (emisi fugitif)', help: 'Paling akurat: kg refrigeran yang diisi ulang setahun (dari nota servis). Bila tidak ada, pakai estimasi jumlah unit × muatan × laju bocor IPCC.', add: 'Tambah refrigeran',
+    row: r => ({ gas: 'R-32', metode: 'isi', kg: '', alat: 'ac', unit: '', charge: '', leak: '', ket: '' }),
+    fields: (r, i) => { let h = sel('ref', i, 'gas', r.gas, Object.keys(E.REFRIG).map(k => [k, E.REFRIG[k].nama]), 'Jenis gas', 'w2') + sel('ref', i, 'metode', r.metode, [['isi', 'Isi ulang (kg)'], ['screening', 'Estimasi unit × muatan']], 'Metode');
+      if (r.metode === 'screening') { const q = E.EQUIP[r.alat] || E.EQUIP.ac; h += sel('ref', i, 'alat', r.alat, Object.keys(E.EQUIP).map(k => [k, E.EQUIP[k].nama]), 'Jenis peralatan', 'w2') + inp('ref', i, 'unit', r.unit, 'Jumlah unit') + inp('ref', i, 'charge', r.charge, 'Muatan per unit (kg)', 'lihat label unit') + inp('ref', i, 'leak', r.leak, 'Laju bocor %/tahun', 'bawaan ' + nf(q.leak * 100, 1), 'w0'); }
+      else h += inp('ref', i, 'kg', r.kg, 'kg diisi ulang setahun', '0');
+      return h + txt('ref', i, 'ket', r.ket, 'Keterangan', 'mis. AC ruang rapat'); } },
+  agri: { title: 'Pertanian · pupuk, kapur & dolomit', help: 'N₂O dari pemupukan nitrogen (langsung + tidak langsung) serta CO₂ dari urea dan pengapuran. Untuk kebun/lahan yang dikelola sendiri.', add: 'Tambah input',
+    row: r => ({ jenis: 'pupuk', pupuk: 'urea', kg: '', npct: '', input: 'pupuk', ket: '' }),
+    fields: (r, i) => { let h = sel('agri', i, 'jenis', r.jenis, [['pupuk', 'Pupuk N sintetis'], ['organik', 'Pupuk organik / kompos / kandang'], ['kapur', 'Kapur pertanian (kalsit)'], ['dolomit', 'Dolomit']], 'Jenis input', 'w2');
+      if (r.jenis === 'pupuk') { h += sel('agri', i, 'pupuk', r.pupuk, Object.keys(E.PUPUK).map(k => [k, E.PUPUK[k].nama]), 'Pupuk', 'w2') + inp('agri', i, 'kg', r.kg, 'kg pupuk setahun'); if (r.pupuk === 'custom') h += inp('agri', i, 'npct', r.npct, 'Kadar N (%)', '', 'w0'); }
+      else if (r.jenis === 'organik') { h += sel('agri', i, 'input', r.input, [['pupuk', 'kg pupuk + % N'], ['n', 'kg N langsung']], 'Data yang dimiliki') + inp('agri', i, 'kg', r.kg, r.input === 'n' ? 'kg N setahun' : 'kg pupuk organik'); if (r.input !== 'n') h += inp('agri', i, 'npct', r.npct, 'Kadar N (%)', 'dari uji lab', 'w0'); }
+      else h += inp('agri', i, 'kg', r.kg, 'kg setahun');
+      return h + txt('agri', i, 'ket', r.ket, 'Keterangan', 'mis. blok kebun 3'); } },
+  elec: { title: 'Listrik PLN & jaringan lain', help: 'Faktor emisi grid resmi ESDM (data 2019) per sistem interkoneksi. Isi REC PLN (MWh) bila punya, untuk perhitungan berbasis pasar.', add: 'Tambah sambungan',
+    row: r => ({ grid: 'jamali', margin: 'cm', qty: '', unit: 'kWh', rec: '', ef: '', ket: '' }),
+    fields: (r, i) => { let h = sel('elec', i, 'grid', r.grid, E.GRID.map(g => [g.id, g.nama]), 'Sistem jaringan', 'w2');
+      if (r.grid === 'custom') h += inp('elec', i, 'ef', r.ef, 'Faktor emisi (tCO₂/MWh)', 'mis. 0,80', 'w0'); else h += sel('elec', i, 'margin', r.margin, [['cm', 'Combined margin (CM)'], ['om', 'Operating margin (OM)']], 'Jenis faktor', '', 0);
+      return h + inp('elec', i, 'qty', r.qty, 'Konsumsi setahun', '0') + sel('elec', i, 'unit', r.unit, [['kWh', 'kWh'], ['MWh', 'MWh']], 'Satuan', 'w0', 0) + inp('elec', i, 'rec', r.rec, 'REC dibeli (MWh)', 'opsional', 'w0') + txt('elec', i, 'ket', r.ket, 'Keterangan', 'mis. ID pelanggan / lokasi'); } },
+  s3: { title: 'Kategori Cakupan 3', help: 'Emisi = jumlah aktivitas × faktor emisi (kg CO₂e per satuan). Gunakan faktor dari sumber resmi dan tulis sumbernya.', add: 'Tambah sumber',
+    row: r => ({ cat: E.SCOPE3_CAT[0], desc: '', qty: '', satuan: '', ef: '', sumber: '' }),
+    fields: (r, i) => sel('s3', i, 'cat', r.cat, E.SCOPE3_CAT.map(c => [c, c]), 'Kategori GHG Protocol', 'w2', 0) + txt('s3', i, 'desc', r.desc, 'Uraian', 'mis. pengiriman via ekspedisi') + inp('s3', i, 'qty', r.qty, 'Jumlah aktivitas') + txt('s3', i, 'satuan', r.satuan, 'Satuan', 'mis. ton-km', '') + inp('s3', i, 'ef', r.ef, 'Faktor (kg CO₂e/satuan)') + txt('s3', i, 'sumber', r.sumber, 'Sumber faktor', 'wajib diisi untuk audit') }
+};
+
+function renderSec(sec) {
+  const S = SEC[sec], rows = st[sec];
+  $('#c-' + sec).innerHTML = `<header><h3>${S.title}</h3><p>${S.help}</p></header>` +
+    (rows.length ? rows.map((r, i) => `<div class="row"><div class="fields">${S.fields(r, i)}</div><div class="out" id="o-${sec}-${i}"><b>–</b><small></small><button class="btn del" data-del="${sec}" data-i="${i}" aria-label="Hapus baris">Hapus</button></div></div>`).join('') : '<p class="empty">Belum ada data. Lewati bila tidak relevan.</p>') +
+    `<div class="btns"><button class="btn ghost" data-add="${sec}">+ ${S.add}</button></div>`;
+}
+
+function renderProfil() {
+  const o = st.org, p = st.opt;
+  $('#orgFields').innerHTML = txt('org', -1, 'nama', o.nama, 'Nama organisasi / usaha', 'mis. PT Maju Bersama') + inp('org', -1, 'tahun', o.tahun, 'Tahun pelaporan', '2026', '', 'numeric') + txt('org', -1, 'lokasi', o.lokasi, 'Lokasi', 'kabupaten/kota, provinsi') +
+    sel('org', -1, 'batas', o.batas, [['operasional', 'Kendali operasional'], ['finansial', 'Kendali finansial'], ['ekuitas', 'Bagian ekuitas']], 'Pendekatan batas organisasi', '', 0) +
+    inp('org', -1, 'output', o.output, 'Output tahunan (untuk intensitas)', 'opsional') + txt('org', -1, 'outUnit', o.outUnit, 'Satuan output', 'mis. ton produk, karyawan', '');
+  $('#optFields').innerHTML = sel('opt', -1, 'gwp', p.gwp, [['AR5', 'IPCC AR5 — dipakai inventaris nasional/UNFCCC'], ['AR6', 'IPCC AR6 — nilai terbaru (GHG Protocol)']], 'Nilai GWP 100 tahun', 'w2') +
+    sel('opt', -1, 'sektor', p.sektor, [['ind', 'Industri / manufaktur / pertanian'], ['com', 'Komersial, perkantoran, rumah tangga']], 'Sektor (faktor CH₄ & N₂O stasioner)', 'w2') +
+    sel('opt', -1, 'n2oSet', p.n2oSet, Object.keys(E.N2O_SET).map(k => [k, E.N2O_SET[k].nama]), 'Faktor N₂O tanah', 'w2') +
+    `<label class="f"><span>Sertakan N₂O tidak langsung</span><span style="display:flex;gap:8px;align-items:center;min-height:44px"><input type="checkbox" data-sec="opt" data-i="-1" data-k="indirect"${p.indirect !== false ? ' checked' : ''}> volatilisasi & pencucian</span></label>`;
+}
+
+/* ---------- hitung & tampilkan ---------- */
+let R;
+function detail(l) {
+  const e = l.e, r = l.r, sec = l.ref[0], d = [];
+  if (sec === 'stat' || sec === 'mob') { if (e.tj) d.push(nf(e.tj * 1000, 1) + ' GJ'); if (e.bio) d.push('CO₂ biogenik ' + tt(e.bio) + ' t'); if (sec === 'mob' && !E.num(r.qty) && E.num(r.km) && E.num(r.kmpl)) d.push('≈ ' + nf(E.num(r.km) / E.num(r.kmpl), 0) + ' L'); }
+  if (sec === 'ref' && e.kgGas) d.push(nf(e.kgGas, 2) + ' kg gas' + (e.memo ? ' · memo, bukan gas Kyoto' : ''));
+  if (sec === 'agri' && e.kgN) d.push(nf(e.kgN, 1) + ' kg N');
+  if (sec === 'elec') { d.push(nf(e.ef, 2) + ' t/MWh'); if (E.num(r.rec)) d.push('pasar ' + tt(e.market) + ' t'); }
+  return d.join(' · ');
+}
+function refresh() {
+  R = E.compute(st);
+  R.lines.forEach(l => { const o = document.getElementById('o-' + l.ref[0] + '-' + l.ref[1]); if (o) { const v = l.e.memo && !l.e.co2e ? l.e.memo : l.e.co2e; o.querySelector('b').textContent = tt(v) + ' t'; o.querySelector('small').textContent = detail(l) || 'ton CO₂e'; } });
+  const T = R.T, tot = T.total || 0;
+  $('#total').textContent = tt(tot); $('#btotal').textContent = tt(tot);
+  $('#who').textContent = 'Total emisi' + (st.org.nama ? ' · ' + st.org.nama : '') + (st.org.tahun ? ' · ' + st.org.tahun : '');
+  $('#basis').textContent = '· Cakupan 2 berbasis lokasi · GWP ' + st.opt.gwp;
+  const pc = v => tot > 0 ? v / tot * 100 : 0;
+  const bars = $('#sbar').children; [T.s1, T.s2, T.s3].forEach((v, i) => bars[i].style.width = pc(v) + '%');
+  $('#sbar').setAttribute('aria-label', `Cakupan 1 ${nf(pc(T.s1), 0)}%, Cakupan 2 ${nf(pc(T.s2), 0)}%, Cakupan 3 ${nf(pc(T.s3), 0)}%`);
+  const out = E.num(st.org.output);
+  $('#strips').innerHTML = [['c1', 'Cakupan 1 · langsung', T.s1, 'BBM, refrigeran, pupuk'], ['c2', 'Cakupan 2 · listrik', T.s2, 'berbasis pasar: ' + tt(T.s2m) + ' t'], ['c3', 'Cakupan 3 · rantai nilai', T.s3, 'opsional']]
+    .map(([c, n, v, s]) => `<div class="strip"><span class="sw ${c}"></span><span>${n}</span><b>${tt(v)} t · ${nf(pc(v), 0)}%</b><span class="sub">${s}</span></div>`).join('') +
+    (out ? `<div class="strip"><span></span><span>Intensitas emisi</span><b>${nf(tot / out, tot / out < 10 ? 2 : 1)} kg/${esc(st.org.outUnit || 'unit')}</b><span class="sub">Cakupan 1 + 2 + 3 dibagi output</span></div>` : '');
+  $('#gas').innerHTML = [['CO₂', T.co2], ['CH₄', T.ch4], ['N₂O', T.n2o], ['HFC/SF₆', T.fgas]].map(([g, v]) => `<div><span>${g}</span><b>${tt(v)} t</b></div>`).join('');
+  $('#memo').innerHTML = (T.bio ? `<p class="memo">CO₂ biogenik ${tt(T.bio)} t: dari biodiesel, etanol dan biomassa. Dilaporkan terpisah, tidak masuk total.</p>` : '') + (T.memo ? `<p class="memo">R-22 (HCFC) ${tt(T.memo)} t CO₂e: gas Protokol Montreal, dicatat sebagai memo.</p>` : '') + (T.s3 ? `<p class="memo">Gas per jenis hanya untuk Cakupan 1 & 2. Cakupan 3 dicatat sebagai CO₂e total.</p>` : '');
+  if (tab === 'hasil') renderHasil();
+}
+
+function srcName(l) {
+  const r = l.r, s = l.ref[0];
+  if (s === 'stat' || s === 'mob') { const f = E.FUELS[r.fuel]; let n = f ? f.nama : '?'; if (f && f.blend === 'fame') n += ' B' + (r.blend || 0); if (f && f.blend === 'etanol' && +r.blend) n += ' E' + r.blend; return n; }
+  if (s === 'ref') return (E.REFRIG[r.gas] || {}).nama || r.gas;
+  if (s === 'agri') return r.jenis === 'pupuk' ? (E.PUPUK[r.pupuk] || {}).nama : ({ organik: 'Pupuk organik', kapur: 'Kapur pertanian', dolomit: 'Dolomit' })[r.jenis];
+  if (s === 'elec') return 'Grid ' + ((E.GRID.find(g => g.id === r.grid) || {}).nama || '');
+  return r.desc || r.cat;
+}
+function actText(l) {
+  const r = l.r, s = l.ref[0];
+  if (s === 'stat' || s === 'mob') return E.num(r.qty) ? r.qty + ' ' + (E.UNIT_LABEL[r.unit] || r.unit) : (E.num(r.km) ? r.km + ' km' : '');
+  if (s === 'ref') return r.metode === 'screening' ? `${r.unit || 0} unit × ${r.charge || 0} kg` : (r.kg || 0) + ' kg';
+  if (s === 'agri') return (r.kg || 0) + (r.jenis === 'organik' && r.input === 'n' ? ' kg N' : ' kg');
+  if (s === 'elec') return (r.qty || 0) + ' ' + r.unit;
+  return (r.qty || 0) + ' ' + (r.satuan || '');
+}
+const BATAS = { operasional: 'kendali operasional', finansial: 'kendali finansial', ekuitas: 'bagian ekuitas' };
+function statement() {
+  const o = st.org, p = st.opt, T = R.T;
+  return `Inventarisasi emisi GRK ${o.nama || 'organisasi'} tahun ${o.tahun || '-'} disusun mengikuti GHG Protocol Corporate Standard dan ISO 14064-1:2018 dengan pendekatan batas ${BATAS[o.batas]}. Emisi dihitung dengan metode IPCC 2006 Guidelines dan 2019 Refinement (Tier 1, faktor default) sesuai acuan IPCC yang diamanatkan Permen LH/BPLH No. 7/2026, pelaksana Perpres No. 110/2025. Konversi ke CO₂e memakai GWP 100 tahun IPCC ${p.gwp}. Cakupan 2 berbasis lokasi memakai faktor emisi grid resmi ESDM, data 2019 (Kepmen ESDM 163.K/HK.02/MEM.S/2021). Campuran biodiesel dihitung terpisah; CO₂ biogenik sebesar ${tt(T.bio)} t dilaporkan di luar cakupan. Total emisi: ${tt(T.total)} t CO₂e (Cakupan 1 ${tt(T.s1)} t; Cakupan 2 ${tt(T.s2)} t berbasis lokasi / ${tt(T.s2m)} t berbasis pasar; Cakupan 3 ${tt(T.s3)} t).`;
+}
+function renderHasil() {
+  const T = R.T, tot = T.total, ls = R.lines.filter(l => l.e.co2e || l.e.memo || l.e.bio);
+  const kat = Object.keys(T.kat).filter(k => T.kat[k]).sort((a, b) => T.kat[b] - T.kat[a]);
+  const iso = [['Kategori 1 · emisi langsung', T.s1], ['Kategori 2 · energi impor (listrik)', T.s2], ['Kategori 3–6 · emisi tidak langsung lain', T.s3]];
+  $('#hasil').innerHTML = `<h2>${tot ? tt(tot) + ' t CO₂e' : 'Belum ada emisi tercatat'}</h2>
+  <p class="mute">${esc(st.org.nama || 'Organisasi')} · tahun ${esc(st.org.tahun)} · GWP ${st.opt.gwp} · batas ${BATAS[st.org.batas]}</p>
+  <div class="btns noprint"><button class="btn" data-act="copy">Salin ringkasan</button><button class="btn ghost" data-act="csv">Ekspor CSV</button><button class="btn ghost" data-act="json">Cadangkan (JSON)</button><button class="btn ghost" data-act="import">Pulihkan dari JSON</button><button class="btn ghost" data-act="print">Cetak / PDF</button></div>
+  <div class="card"><header><h3>Per sumber emisi</h3></header><div class="scroll"><table class="stack"><thead><tr><th>Kategori</th><th class="n">t CO₂e</th><th class="n">Porsi</th></tr></thead><tbody>
+  ${kat.map(k => `<tr><td>${esc(k)}</td><td class="n">${tt(T.kat[k])}</td><td class="n">${nf(tot ? T.kat[k] / tot * 100 : 0, 1)}%</td></tr>`).join('')}</tbody>
+  <tfoot><tr><td>Total (berbasis lokasi)</td><td class="n">${tt(tot)}</td><td class="n">100%</td></tr><tr><td>Total (Cakupan 2 berbasis pasar)</td><td class="n">${tt(T.totalMarket)}</td><td></td></tr></tfoot></table></div></div>
+  <div class="card"><header><h3>Pemetaan ISO 14064-1:2018</h3></header><table class="stack"><thead><tr><th>Kategori ISO</th><th class="n">t CO₂e</th></tr></thead><tbody>${iso.map(([k, v]) => `<tr><td>${k}</td><td class="n">${tt(v)}</td></tr>`).join('')}</tbody></table></div>
+  <div class="card"><header><h3>Rincian per baris data</h3><p>CH₄, N₂O dan HFC/SF₆ ditampilkan dalam t CO₂e.</p></header><div class="scroll"><table class="stack"><thead><tr><th>Cak.</th><th>Sumber</th><th>Aktivitas</th><th class="n">CO₂</th><th class="n">CH₄</th><th class="n">N₂O</th><th class="n">HFC/SF₆</th><th class="n">Total</th><th class="n">CO₂ bio</th></tr></thead><tbody>
+  ${ls.length ? ls.map(l => `<tr><td>${l.s}</td><td>${esc(srcName(l))}${l.r.ket ? '<br><span class="small mute">' + esc(l.r.ket) + '</span>' : ''}${l.r.sumber ? '<br><span class="small mute">Sumber: ' + esc(l.r.sumber) + '</span>' : ''}</td><td>${esc(actText(l))}</td><td class="n">${tt(l.e.co2)}</td><td class="n">${tt(l.e.ch4)}</td><td class="n">${tt(l.e.n2o)}</td><td class="n">${tt(l.e.fgas)}</td><td class="n"><b>${tt(l.e.co2e)}</b></td><td class="n">${tt(l.e.bio)}</td></tr>`).join('') : '<tr><td colspan="9" class="mute">Belum ada data.</td></tr>'}
+  </tbody></table></div></div>
+  <div class="card"><header><h3>Pernyataan metodologi</h3><p>Siap disalin ke laporan keberlanjutan.</p></header><p>${esc(statement())}</p></div>
+  <p class="note">Hasil ini perkiraan Tier 1 untuk perencanaan, pelaporan sukarela, dan persiapan MRV. Pelaporan wajib atau perdagangan karbon memerlukan verifikasi oleh lembaga terakreditasi KAN, dan bisa memerlukan faktor spesifik (Tier 2/3), misalnya NCV dari sertifikat mutu batubara.</p>`;
+}
+
+function renderMetode() {
+  const g = E.GWP, F = E.FUELS;
+  const fuelRows = Object.keys(F).map(k => { const f = F[k]; return `<tr><td>${esc(f.nama)}</td><td class="n">${nf(f.ncv, 1)}</td><td class="n">${nf(f.co2, 0)}${f.bio ? ' (bio)' : ''}</td><td class="n">${f.ind.join(' / ')}</td><td class="n">${f.com.join(' / ')}</td><td class="n">${f.mob ? f.mob.join(' / ') : '–'}</td><td class="n">${f.rho ? nf(f.rho, 3) : '–'}</td></tr>`; }).join('') +
+    [E.FAME, E.ETANOL].map(f => `<tr><td>${f.nama} (komponen campuran)</td><td class="n">${nf(f.ncv, 1)}</td><td class="n">${nf(f.co2, 0)} (bio)</td><td class="n" colspan="3">ikut faktor solar / bensin</td><td class="n">${nf(f.rho, 3)}</td></tr>`).join('');
+  const gridRows = E.GRID.filter(x => x.om !== null).map(x => `<tr><td>${esc(x.nama)}</td><td class="n">${nf(x.om, 2)}</td><td class="n">${nf(x.cm, 2)}</td></tr>`).join('');
+  const refRows = Object.keys(E.REFRIG).map(k => `<tr><td>${esc(E.REFRIG[k].nama)}</td><td class="n">${nf(E.refrigGWP(k, 'AR5'), 0)}</td><td class="n">${nf(E.refrigGWP(k, 'AR6'), 0)}</td></tr>`).join('');
+  const N = E.N2O_SET, nk = Object.keys(N);
+  const nRow = (lab, key) => `<tr><td>${lab}</td>${nk.map(k => `<td class="n">${nf(N[k][key], 4).replace(/0+$/, '').replace(/,$/, '')}</td>`).join('')}</tr>`;
+  $('#metode').innerHTML = `<h2>Faktor emisi &amp; dasar hukum</h2>
+  <p class="mute">Semua faktor yang dipakai aplikasi ditampilkan di sini agar dapat ditelusuri. Pembaruan terakhir: November 2026.</p>
+  <div class="card"><header><h3>Dasar regulasi & standar</h3></header><ol class="law">
+   <li><b>Perpres No. 110 Tahun 2025</b> tentang Penyelenggaraan Instrumen Nilai Ekonomi Karbon dan Pengendalian Emisi GRK Nasional. Ditetapkan 10 Oktober 2025, menggantikan Perpres 98/2021. <a href="https://peraturan.bpk.go.id/Details/334733">JDIH BPK</a></li>
+   <li><b>Permen LH/BPLH No. 7 Tahun 2026</b> tentang Penyelenggaraan NDC, berlaku 15 Juni 2026. Mewajibkan pelaku usaha melakukan inventarisasi GRK mandiri dan melapor setiap tahun paling lambat Maret. Penghitungan berpedoman pada IPCC (Tier 1–3) disertai analisis ketidakpastian dan QA/QC.</li>
+   <li><b>Kepmen ESDM 163.K/HK.02/MEM.S/2021</b>: Penetapan Faktor Emisi GRK Sistem Ketenagalistrikan, data tahun 2019. Ini faktor grid resmi terbaru yang dipublikasikan. <a href="https://gatrik.esdm.go.id/gatrik/gatrik-api//storage/migrasi/download_index/files/96d7c-nilai-fe-grk-sistem-ketenagalistrikan-tahun-2019.pdf">Tabel ESDM (PDF)</a></li>
+   <li><b>Kepmen ESDM 257.K/EK.01/MEM.E/2026</b>: mandatori biodiesel B50 untuk seluruh minyak solar dalam negeri mulai 1 Juli 2026, dengan stok B40 boleh disalurkan hingga 30 September 2026. Sebelumnya berlaku B40 (2025) dan B35 (2023–2024). Mandatori E5 bensin non-PSO mulai semester II 2026 secara bertahap.</li>
+   <li><b>Permen ESDM No. 16/2022</b>: NEK subsektor pembangkit tenaga listrik (PTBAE, Tier 2), khusus untuk pembangkit.</li>
+   <li><b>IPCC 2006 Guidelines</b> beserta <b>2019 Refinement</b>. Metode yang sama dipakai Indonesia dalam BTR-1 (inventaris nasional 2000–2022) ke UNFCCC. <a href="https://www.ipcc-nggip.iges.or.jp/public/2019rf/index.html">IPCC TFI</a></li>
+   <li><b>GHG Protocol</b> Corporate Standard (2004), Scope 2 Guidance (2015), dan Scope 3 Standard (2011), serta <b>ISO 14064-1:2018</b>. Revisi gabungan GHG Protocol–ISO sedang disusun; konsultasi publiknya direncanakan Q2 2027. <a href="https://ghgprotocol.org/ghg-protocol-corporate-suite-standards-and-guidance-update-process">Status revisi</a></li>
+   <li><b>GWP 100 tahun</b>: AR5 (sesuai kerangka transparansi Persetujuan Paris) atau AR6, dari tabel GHG Protocol versi Agustus 2024. <a href="https://ghgprotocol.org/sites/default/files/2024-08/Global-Warming-Potential-Values%20%28August%202024%29.pdf">Tabel GWP</a></li>
+  </ol></div>
+  <div class="card"><header><h3>Rumus</h3></header>
+   <p><b>Bahan bakar:</b> Emisi gas = jumlah × densitas × NCV × faktor emisi; CO₂e = CO₂ + CH₄ × GWP + N₂O × GWP. Untuk biosolar, porsi FAME dihitung terpisah: CO₂-nya biogenik, sedangkan CH₄ dan N₂O-nya tetap dihitung. Gas dalam MMBTU dianggap nilai kalor kotor (GCV) dan dikonversi ke NCV × 0,9 (IPCC).</p>
+   <p><b>Refrigeran:</b> kg gas lepas × GWP campuran. Untuk metode estimasi: jumlah unit × muatan × laju bocor (IPCC 2006 Vol.3 Tabel 7.9, batas atas).</p>
+   <p><b>Pertanian:</b> N₂O = [N × EF1 + (N_sintetis × Frac_GASF + N_organik × Frac_GASM) × EF4 + N × Frac_LEACH × EF5] × 44/28. CO₂ urea = kg × 0,20 × 44/12. Kapur: kg × 0,12 × 44/12. Dolomit: kg × 0,13 × 44/12.</p>
+   <p><b>Listrik:</b> kWh × faktor grid (tCO₂/MWh = kg CO₂/kWh). Berbasis pasar = (kWh − REC) × faktor grid, karena Indonesia belum menerbitkan residual mix.</p></div>
+  <div class="card"><header><h3>Bahan bakar (IPCC 2006 Vol.2)</h3><p>NCV dalam TJ/Gg, CO₂ dalam kg/TJ, CH₄ / N₂O dalam kg/TJ. Densitas (kg/L) adalah nilai tipikal; ganti dengan sertifikat mutu pemasok bila ada.</p></header>
+   <div class="scroll"><table class="stack"><thead><tr><th>Bahan bakar</th><th class="n">NCV</th><th class="n">CO₂</th><th class="n">Industri</th><th class="n">Komersial</th><th class="n">Jalan</th><th class="n">Densitas</th></tr></thead><tbody>${fuelRows}</tbody></table></div></div>
+  <div class="card"><header><h3>Faktor emisi grid ESDM (tCO₂/MWh, data 2019)</h3><p>Bawaan: combined margin ex-post (OM 50% : BM 50%). Bila PLN/ESDM menerbitkan faktor lebih baru, pilih "Faktor sendiri".</p></header>
+   <div class="scroll"><table class="stack"><thead><tr><th>Sistem</th><th class="n">OM</th><th class="n">CM</th></tr></thead><tbody>${gridRows}</tbody></table></div></div>
+  <div class="card"><header><h3>GWP 100 tahun</h3></header><div class="scroll"><table class="stack"><thead><tr><th>Gas</th><th class="n">AR5</th><th class="n">AR6</th></tr></thead><tbody>
+   <tr><td>CH₄ (fosil)</td><td class="n">${nf(g.AR5.CH4_f, 0)}</td><td class="n">${nf(g.AR6.CH4_f, 1)}</td></tr><tr><td>CH₄ (non-fosil)</td><td class="n">${nf(g.AR5.CH4_nf, 0)}</td><td class="n">${nf(g.AR6.CH4_nf, 1)}</td></tr><tr><td>N₂O</td><td class="n">${g.AR5.N2O}</td><td class="n">${g.AR6.N2O}</td></tr>${refRows}</tbody></table></div></div>
+  <div class="card"><header><h3>Faktor N₂O tanah</h3></header><div class="scroll"><table class="stack"><thead><tr><th>Parameter</th>${nk.map(k => `<th class="n">${esc(N[k].nama)}</th>`).join('')}</tr></thead><tbody>
+   ${nRow('EF1 pupuk sintetis', 'EF1s')}${nRow('EF1 pupuk organik', 'EF1o')}${nRow('EF4 deposisi', 'EF4')}${nRow('EF5 pencucian', 'EF5')}${nRow('Frac GASF', 'GASF')}${nRow('Frac GASM', 'GASM')}${nRow('Frac LEACH', 'LEACH')}</tbody></table></div></div>
+  <div class="card"><header><h3>Batasan</h3></header><p>Belum dicakup: emisi proses industri (semen, logam, kimia), limbah padat dan air limbah (termasuk POME), ternak, padi sawah, serta perubahan stok karbon lahan dan gambut (FOLU). Bila sumber-sumber ini signifikan bagi Anda, hitung dengan metode IPCC yang sesuai atau dengan bantuan konsultan/verifikator.</p></div>`;
+}
+
+/* ---------- tab ---------- */
+function setTab(t) {
+  tab = t; try { localStorage.setItem(KEY + '-tab', t); } catch (e) {}
+  document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+  document.querySelectorAll('section.pane').forEach(s => s.classList.toggle('on', s.id === 'p-' + t));
+  if (t === 'hasil') renderHasil();
+}
+function renderBanner() {
+  $('#sampleBanner').innerHTML = st.sample ? `<div class="banner"><span>Ini data contoh usaha pengolahan rempah. Ganti dengan data Anda atau mulai dari kosong.</span><button class="btn" data-act="clear">Mulai dari kosong</button><button class="btn" data-act="keep">Pakai sebagai titik awal</button></div>` : '';
+}
+function renderAll() { renderProfil(); Object.keys(SEC).forEach(renderSec); renderMetode(); renderBanner(); refresh(); setTab(tab); }
+
+/* ---------- ekspor ---------- */
+function showModal(title, text, file, mime) {
+  let downloaded = false;
+  if (!inFrame) { try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = file; document.body.appendChild(a); a.click(); a.remove(); downloaded = true; } catch (e) {} }
+  $('#mTitle').textContent = title; $('#mText').value = text; $('#mMsg').textContent = '';
+  $('#mNote').textContent = downloaded ? 'Berkas ' + file + ' sudah diunduh. Isinya juga ditampilkan di bawah.' : 'Salin teks di bawah, lalu tempel ke Excel, Notepad, atau simpan sebagai ' + file + '.';
+  $('#modal').classList.add('on'); $('#mCopy').focus();
+}
+function csv() {
+  const c = v => { const s = typeof v === 'number' ? (v / 1000).toLocaleString('id-ID', { maximumFractionDigits: 4, useGrouping: false }) : String(v == null ? '' : v); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const rows = [['Cakupan', 'Kategori', 'Sumber', 'Aktivitas', 'CO2 (t)', 'CH4 (t CO2e)', 'N2O (t CO2e)', 'HFC/SF6 (t CO2e)', 'Total (t CO2e)', 'CO2 biogenik (t)', 'Berbasis pasar (t CO2e)', 'Keterangan/Sumber']];
+  R.lines.forEach(l => rows.push([l.s, l.kat, srcName(l), actText(l), l.e.co2, l.e.ch4, l.e.n2o, l.e.fgas, l.e.co2e, l.e.bio, l.s === 2 ? l.e.market : l.e.co2e, [l.r.ket, l.r.sumber].filter(Boolean).join(' | ')]));
+  rows.push(['', 'TOTAL', '', '', R.T.co2, R.T.ch4, R.T.n2o, R.T.fgas, R.T.total, R.T.bio, R.T.totalMarket, 'GWP ' + st.opt.gwp]);
+  return '﻿' + rows.map(r => r.map(c).join(';')).join('\n');
+}
+
+/* ---------- peristiwa ---------- */
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  if (b.dataset.tab) return setTab(b.dataset.tab);
+  if (b.dataset.add) { const s = b.dataset.add; st[s].push(SEC[s].row()); save(); renderSec(s); refresh(); const ins = $('#c-' + s).querySelectorAll('.row'); const last = ins[ins.length - 1]; if (last) { const q = last.querySelector('input'); if (q) q.focus(); } return; }
+  if (b.dataset.del) { st[b.dataset.del].splice(+b.dataset.i, 1); save(); renderSec(b.dataset.del); refresh(); return; }
+  const a = b.dataset.act;
+  if (a === 'clear') { st = blank(); save(); setTab('profil'); renderAll(); }
+  if (a === 'keep') { st.sample = false; save(); renderBanner(); }
+  if (a === 'copy') { const t = statement() + '\n\n' + Object.keys(R.T.kat).filter(k => R.T.kat[k]).map(k => `- ${k}: ${tt(R.T.kat[k])} t CO2e`).join('\n'); showModal('Ringkasan', t, 'ringkasan-grk.txt', 'text/plain'); }
+  if (a === 'csv') showModal('Ekspor CSV', csv(), `grk-${st.org.tahun || 'data'}.csv`, 'text/csv');
+  if (a === 'json') showModal('Cadangan data (JSON)', JSON.stringify(st, null, 1), `grk-cadangan-${st.org.tahun || ''}.json`, 'application/json');
+  if (a === 'import') $('#fileIn').click();
+  if (a === 'print') { if (inFrame) showModal('Cetak', 'Fitur cetak tidak tersedia di pratinjau ini. Buka aplikasi terpasang (PWA) atau versi web mandiri, lalu tekan Cetak / PDF.\n\n' + statement(), 'laporan.txt', 'text/plain'); else try { window.print(); } catch (e) {} }
+});
+$('#mClose').onclick = () => $('#modal').classList.remove('on');
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') $('#modal').classList.remove('on'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modal').classList.remove('on'); });
+$('#mCopy').onclick = async () => { const t = $('#mText'); try { await navigator.clipboard.writeText(t.value); $('#mMsg').textContent = 'Tersalin.'; } catch (e) { t.removeAttribute('readonly'); t.select(); try { document.execCommand('copy'); $('#mMsg').textContent = 'Tersalin.'; } catch (x) { $('#mMsg').textContent = 'Pilih teks lalu salin manual.'; } t.setAttribute('readonly', ''); } };
+$('#fileIn').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return; const rd = new FileReader();
+  rd.onload = () => { try { const d = JSON.parse(rd.result); if (!d || !d.opt || !d.org) throw 0; const b = blank(); st = Object.assign(b, d); ['stat', 'mob', 'ref', 'agri', 'elec', 's3'].forEach(k => { if (!Array.isArray(st[k])) st[k] = []; }); st.sample = false; save(); renderAll(); setTab('hasil'); } catch (x) { showModal('Gagal memulihkan', 'Berkas bukan cadangan Kalkulator GRK yang valid.', 'x.txt', 'text/plain'); } };
+  rd.readAsText(f); e.target.value = '';
+});
+function setVal(t) {
+  const sec = t.dataset.sec, i = +t.dataset.i, k = t.dataset.k;
+  const v = t.type === 'checkbox' ? t.checked : t.value;
+  if (i < 0) st[sec][k] = v; else if (st[sec][i]) st[sec][i][k] = v;
+  if (st.sample) { st.sample = false; renderBanner(); }
+  return { sec, i, k };
+}
+document.addEventListener('input', ev => { const t = ev.target; if (!t.dataset || !t.dataset.sec || t.tagName === 'SELECT') return; setVal(t); save(); refresh(); });
+document.addEventListener('change', ev => {
+  const t = ev.target; if (!t.dataset || !t.dataset.sec) return;
+  const { sec, i, k } = setVal(t);
+  if (i >= 0 && t.dataset.rr) {
+    const r = st[sec][i];
+    if (k === 'fuel') { const f = E.FUELS[r.fuel]; if (f.units.indexOf(r.unit) < 0) r.unit = f.units[0]; if (!f.blend) r.blend = 0; else if (f.blend === 'fame' && !BLEND_D.some(b => b[0] === +r.blend && b[0] > 0)) r.blend = blendFor(st.org.tahun); else if (f.blend === 'etanol' && +r.blend !== 5) r.blend = 0; }
+    renderSec(sec);
+  }
+  save(); refresh();
+});
+
+renderAll();
+if ('serviceWorker' in navigator && !inFrame && (location.protocol === 'https:' || location.hostname === 'localhost')) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
+}
+</script>
+</body>
+</html>
