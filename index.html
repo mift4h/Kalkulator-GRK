@@ -6,6 +6,7 @@
 <title>Kalkulator GRK Indonesia</title>
 <meta name="description" content="Kalkulator inventarisasi emisi gas rumah kaca (Cakupan 1, 2, 3) berbasis IPCC, GHG Protocol, ISO 14064-1 dan faktor emisi resmi Indonesia.">
 <meta name="theme-color" content="#16191c">
+<meta name="author" content="miftaelfahmi">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -51,6 +52,7 @@ small,.small{font-size:13px}
 .gas div{background:var(--bg);padding:8px 10px;border-radius:3px}
 .gas span{display:block;font-size:13px;color:var(--mute)}
 .gas b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.credit{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--mute)}.credit b{color:var(--ink)}
 .memo{font-size:13px;color:var(--mute);border-left:3px solid var(--red);padding-left:10px}
 /* ---------- utama ---------- */
 main{padding:0 clamp(16px,3.4vw,52px) 90px}
@@ -88,6 +90,12 @@ tfoot td{font-weight:600;border-top:2px solid var(--ink)}
 .banner{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:4px;margin-top:18px;font-size:14px}
 .banner .btn{background:var(--bg);color:var(--ink);border-color:var(--bg);min-height:36px;padding:5px 12px}
 .law li{margin-bottom:10px}
+.grp{font-size:21px;margin:34px 0 0;padding-top:14px;border-top:6px solid var(--ink)}
+.grp span{display:block;font:500 13px/1.4 Inter,system-ui,sans-serif;color:var(--mute);margin-top:4px}
+.jump{display:flex;gap:6px;margin:14px 0 0;padding-bottom:4px}
+.jump a{flex:none;font-size:14px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:8px 12px;min-height:36px}
+.guide{background:var(--field);border-left:3px solid var(--red);padding:10px 14px;margin-top:12px;font-size:14px}
+.guide summary{cursor:pointer;font-weight:600;min-height:32px}
 .bottom{display:none}
 .modal{position:fixed;inset:0;background:rgb(0 0 0/.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
 .modal.on{display:flex}
@@ -132,6 +140,7 @@ tfoot td{font-weight:600;border-top:2px solid var(--ink)}
   <div id="strips"></div>
   <div class="gas" id="gas"></div>
   <div id="memo"></div>
+  <p class="credit">Kalkulator GRK Indonesia · dibuat oleh <b>miftaelfahmi</b></p>
 </aside>
 
 <main>
@@ -154,15 +163,30 @@ tfoot td{font-weight:600;border-top:2px solid var(--ink)}
     <div class="card"><header><h3>Metode</h3><p>Nilai bawaan sudah sesuai praktik inventarisasi nasional. Ubah hanya bila ada alasan.</p></header>
       <div class="grid2" id="optFields"></div>
     </div>
+    <div class="card"><header><h3>Usaha pertanian / perkebunan (opsional)</h3><p>Isi bila organisasi mengelola kebun atau lahan. Komoditas menentukan panduan di Cakupan 1, sedangkan luas dan produksi dipakai untuk intensitas emisi per hektare dan per ton produk di Hasil.</p></header><div class="grid2" id="kebunFields"></div></div>
   </section>
 
   <section class="pane" id="p-s1">
     <h2>Cakupan 1 · emisi langsung</h2>
     <p class="mute">Sumber yang dimiliki atau dikendalikan organisasi. Isi data setahun penuh, misalnya dari nota BBM, faktur gas, atau catatan servis AC.</p>
+    <nav class="jump scroll" aria-label="Subkategori Cakupan 1"><a href="#g-energi">Energi</a><a href="#g-fugitif">Fugitif</a><a href="#g-tani">Pertanian &amp; perkebunan</a><a href="#g-lahan">Lahan</a><a href="#g-limbah">Limbah cair</a><a href="#g-serap">Serapan (memo)</a></nav>
+    <h3 class="grp" id="g-energi">A · Pembakaran bahan bakar <span>ISO 14064-1 kat. 1 · IPCC sektor Energi (1A)</span></h3>
     <div class="card" id="c-stat"></div>
     <div class="card" id="c-mob"></div>
+    <h3 class="grp" id="g-fugitif">B · Emisi fugitif <span>ISO 14064-1 kat. 1 · IPCC IPPU (2F)</span></h3>
     <div class="card" id="c-ref"></div>
+    <h3 class="grp" id="g-tani">C · Pertanian &amp; perkebunan <span>ISO 14064-1 kat. 1 · IPCC AFOLU (3A, 3C) · GHG Protocol LSR</span></h3>
+    <details class="guide" id="kebunGuide"></details>
     <div class="card" id="c-agri"></div>
+    <div class="card" id="c-ternak"></div>
+    <div class="card" id="c-bakar"></div>
+    <h3 class="grp" id="g-lahan">D · Lahan: gambut &amp; alih guna lahan <span>ISO 14064-1 kat. 1 (LULUCF) · IPCC AFOLU (3B) · GHG Protocol LSR</span></h3>
+    <div class="card" id="c-peat"></div>
+    <div class="card" id="c-luc"></div>
+    <h3 class="grp" id="g-limbah">E · Limbah cair pengolahan milik sendiri <span>ISO 14064-1 kat. 1 · IPCC Limbah (4D2)</span></h3>
+    <div class="card" id="c-limbah"></div>
+    <h3 class="grp" id="g-serap">F · Serapan karbon (dilaporkan terpisah) <span>GHG Protocol LSR · ISO 14064-1 pembuangan GRK</span></h3>
+    <div class="card" id="c-bio"></div>
   </section>
 
   <section class="pane" id="p-s2">
@@ -174,6 +198,7 @@ tfoot td{font-weight:600;border-top:2px solid var(--ink)}
   <section class="pane" id="p-s3">
     <h2>Cakupan 3 · rantai nilai</h2>
     <p class="mute">Opsional. Masukkan data aktivitas beserta faktor emisi dari sumber yang dapat dirujuk, misalnya pemasok, studi LCA, atau basis data faktor emisi. Cantumkan sumbernya.</p>
+    <div class="card" id="s3auto"></div>
     <div class="card" id="c-s3"></div>
   </section>
 
@@ -282,17 +307,91 @@ var GRK = (function () {
   };
 
   /* ---------- Pertanian: N2O tanah, urea, kapur ---------- */
+  /* PRPc/PRPs = EF3PRP kotoran ternak di padang/kebun: sapi-kerbau / kambing-domba (2019 iklim basah; 2006 default) */
   var N2O_SET = {
-    ipcc2019: { nama: 'IPCC 2019 Refinement — iklim basah (disagregasi)', EF1s: 0.016, EF1o: 0.006, EF4: 0.014, EF5: 0.011, GASF: 0.11, GASM: 0.21, LEACH: 0.24 },
-    ipcc2006: { nama: 'IPCC 2006 — default agregat', EF1s: 0.010, EF1o: 0.010, EF4: 0.010, EF5: 0.0075, GASF: 0.10, GASM: 0.20, LEACH: 0.30 }
+    ipcc2019: { nama: 'IPCC 2019 Refinement — iklim basah (disagregasi)', EF1s: 0.016, EF1o: 0.006, EF4: 0.014, EF5: 0.011, GASF: 0.11, GASM: 0.21, LEACH: 0.24, PRPc: 0.006, PRPs: 0.003 },
+    ipcc2006: { nama: 'IPCC 2006 — default agregat', EF1s: 0.010, EF1o: 0.010, EF4: 0.010, EF5: 0.0075, GASF: 0.10, GASM: 0.20, LEACH: 0.30, PRPc: 0.02, PRPs: 0.01 }
   };
+  /* up = emisi hulu produksi pupuk (Cakupan 3 kat.1), kg CO2e/kg produk. Urea: EPD Pupuk Sriwidjaja (S-P-03274), A1–A3 */
   var PUPUK = {
-    urea: { nama: 'Urea (46% N)', N: 0.46, urea: true },
+    urea: { nama: 'Urea (46% N)', N: 0.46, urea: true, up: 0.833 },
     za: { nama: 'ZA / amonium sulfat (21% N)', N: 0.21 },
     npk15: { nama: 'NPK 15-15-15 (15% N)', N: 0.15 },
+    phonska: { nama: 'NPK Phonska 15-10-12 (15% N)', N: 0.15 },
     npk16: { nama: 'NPK 16-16-16 (16% N)', N: 0.16 },
+    npk12: { nama: 'NPK 12-12-17-2 (12% N)', N: 0.12 },
+    dap: { nama: 'DAP 18-46-0 (18% N)', N: 0.18 },
+    kno3: { nama: 'KNO₃ / kalium nitrat (13% N)', N: 0.13 },
+    nonN: { nama: 'Pupuk tanpa N (SP-36, KCl, kieserit, borat, RP)', N: 0 },
     custom: { nama: 'Pupuk N lain (isi % N)', N: null }
   };
+  var ORGANIK = { kandang: 'Pupuk kandang', kompos: 'Kompos', tankos: 'Tandan kosong sawit (tankos)', lcpks: 'Limbah cair PKS (aplikasi lahan)', kulit: 'Kulit buah kakao / kulit & pulp kopi', pangkas: 'Sisa pangkasan / pelepah', lain: 'Bahan organik lain' };
+
+  /* ================= PERKEBUNAN ================= */
+  /* Biomassa tanaman tahunan, tropis — IPCC 2019 Refinement Vol.4 Bab 5, Tabel 5.1 & 5.3 (t C/ha; G = t C/ha/th) */
+  var CROPC = {
+    sawit: { nama: 'Kelapa sawit (monokultur)', Lmax: 60.0, G: 2.4, Lmean: 30.0, siklus: 25 },
+    karet: { nama: 'Karet (monokultur)', Lmax: 80.2, G: 3.0, Lmean: 40.1, siklus: 27 },
+    teh: { nama: 'Teh', Lmax: 20.7, G: 0.7, Lmean: 18.3, siklus: 30 },
+    naungan: { nama: 'Tanaman tahunan bernaung (kopi/kakao + pohon pelindung)', Lmax: 48.0, G: 2.4, Lmean: 24.0, siklus: 20 },
+    multistrata: { nama: 'Agroforestri multistrata (pala, cengkeh, kebun campur)', Lmax: 65.0, G: 3.25, Lmean: 32.5, siklus: 20 },
+    custom: { nama: 'Nilai sendiri (isi t C/ha)', Lmax: null, G: null, Lmean: null, siklus: 20 }
+  };
+  var KOMODITAS = {
+    sawit: { nama: 'Kelapa sawit', produk: 'ton TBS', crop: 'sawit' },
+    kopi: { nama: 'Kopi', produk: 'ton kopi biji (green bean)', crop: 'naungan' },
+    kakao: { nama: 'Kakao', produk: 'ton biji kakao kering', crop: 'naungan' },
+    karet: { nama: 'Karet', produk: 'ton karet kering', crop: 'karet' },
+    kelapa: { nama: 'Kelapa', produk: 'ton kopra', crop: 'custom' },
+    pala: { nama: 'Pala', produk: 'ton biji & fuli kering', crop: 'multistrata' },
+    teh: { nama: 'Teh', produk: 'ton teh kering', crop: 'teh' },
+    tebu: { nama: 'Tebu', produk: 'ton tebu', crop: null },
+    cengkeh: { nama: 'Cengkeh', produk: 'ton cengkeh kering', crop: 'multistrata' },
+    lada: { nama: 'Lada', produk: 'ton lada kering', crop: 'custom' },
+    lain: { nama: 'Komoditas lain', produk: 'ton produk', crop: 'custom' }
+  };
+  /* Tanah gambut dikeringkan, tropis — IPCC 2013 Wetlands Supplement Bab 2 (Tabel 2.1, 2.3, 2.4, 2.5)
+     co2c: t CO2-C/ha/th ; ch4: kg CH4/ha/th (lahan) ; n2o: kg N2O-N/ha/th */
+  var PEAT = {
+    sawit: { nama: 'Perkebunan sawit di gambut', co2c: 11, ch4: 0, n2o: 1.2 },
+    budidaya: { nama: 'Tanaman budidaya lain di gambut (karet, kelapa, kopi, nanas, dll.)', co2c: 14, ch4: 7.0, n2o: 5.0 },
+    hutan: { nama: 'Hutan/semak di gambut yang terdrainase (mis. areal NKT)', co2c: 5.3, ch4: 4.9, n2o: 2.4 }
+  };
+  var PEAT_DOC = 0.82, PEAT_DITCH = 2259, PEAT_FDITCH = 0.02;   // t C/ha/th; kg CH4/ha parit/th; fraksi luas parit
+  /* Ternak — ent: fermentasi enterik, mm: pengelolaan kotoran (kg CH4/ekor/th); nrate: kg N/1000 kg BB/hari (IPCC 2006 Asia) */
+  var TERNAK = {
+    sapi: { nama: 'Sapi potong', ent: 33.14, mm: 1, nrate: 0.34, bb: 250, prp: 'PRPc' },
+    kerbau: { nama: 'Kerbau', ent: 55, mm: 2, nrate: 0.32, bb: 300, prp: 'PRPc' },
+    kambing: { nama: 'Kambing', ent: 3.27, mm: 0.22, nrate: 1.37, bb: 45, prp: 'PRPs' },
+    domba: { nama: 'Domba', ent: 5.25, mm: 0.20, nrate: 1.17, bb: 45, prp: 'PRPs' }
+  };
+  /* Limbah cair: Bo 0,25 kg CH4/kg COD; MCF IPCC */
+  var LIMBAH = {
+    pome: { nama: 'POME — limbah cair pabrik kelapa sawit', m3: 0.65, cod: 51, basis: 'ton TBS diolah' },
+    kopi: { nama: 'Limbah olah basah kopi', m3: null, cod: null, basis: 'ton buah kopi (cherry)' },
+    karet: { nama: 'Limbah cair pabrik karet (crumb rubber/lateks)', m3: null, cod: null, basis: 'ton karet' },
+    lain: { nama: 'Limbah cair pengolahan lain', m3: null, cod: null, basis: 'ton produk' }
+  };
+  var MCF = { dalam: { nama: 'Kolam anaerob dalam (> 2 m)', v: 0.8 }, dangkal: { nama: 'Kolam anaerob dangkal (< 2 m)', v: 0.2 }, digester: { nama: 'Digester / kolam tertutup (biogas)', v: 0.8 }, aerob: { nama: 'Pengolahan aerobik terkelola baik', v: 0 } };
+  var DESTRUKSI = { tidak: { nama: 'Tidak ditangkap', v: 0 }, flareTerbuka: { nama: 'Flare terbuka', v: 0.5 }, flareTertutup: { nama: 'Flare tertutup', v: 0.9 }, mesin: { nama: 'Dimanfaatkan (genset/boiler)', v: 1.0 } };
+  /* Tutupan lahan sebelum konversi — biomassa atas permukaan (t bahan kering/ha), FREL Indonesia (dok. FCPF ER-MR 2022); fraksi C 0,47 */
+  var TUTUPAN = {
+    hlkp: { nama: 'Hutan lahan kering primer', agb: 287.08 },
+    hlks: { nama: 'Hutan lahan kering sekunder', agb: 209.44 },
+    hrp: { nama: 'Hutan rawa primer', agb: 538.56 },
+    hrs: { nama: 'Hutan rawa sekunder', agb: 365.30 },
+    hmp: { nama: 'Hutan mangrove primer', agb: 263.38 },
+    hms: { nama: 'Hutan mangrove sekunder', agb: 181.83 },
+    ht: { nama: 'Hutan tanaman', agb: 133.11 },
+    perk: { nama: 'Perkebunan (estate crop)', agb: 105.75 },
+    sk: { nama: 'Semak belukar kering', agb: 41.36 },
+    sb: { nama: 'Semak belukar rawa', agb: 46.53 },
+    pert: { nama: 'Pertanian lahan kering', agb: 15.96 },
+    custom: { nama: 'Isi stok karbon sendiri (t C/ha)', agb: null }
+  };
+  var CF_C = 0.47;
+  /* Pembakaran terbuka sisa tanaman — IPCC 2006 Vol.4 Tabel 2.4–2.6 (tebu: 6,5 t bk/ha, faktor pembakaran 0,80; EF CH4 2,7 & N2O 0,07 g/kg bk) */
+  var BAKAR = { ch4: 2.7, n2o: 0.07, tebuMB: 6.5, tebuCF: 0.80 };
 
   var SCOPE3_CAT = ['1 Barang & jasa dibeli', '2 Barang modal', '3 Energi & bahan bakar (hulu)', '4 Transportasi & distribusi hulu', '5 Limbah operasional', '6 Perjalanan dinas', '7 Komuter karyawan', '8 Aset sewa hulu', '9 Transportasi & distribusi hilir', '10 Pengolahan produk terjual', '11 Penggunaan produk terjual', '12 Akhir masa pakai produk', '13 Aset sewa hilir', '14 Waralaba', '15 Investasi'];
 
@@ -385,6 +484,8 @@ var GRK = (function () {
       var P = PUPUK[r.pupuk] || PUPUK.urea, nfrac = P.N === null ? num(r.npct) / 100 : P.N;
       FSN = kg * nfrac;
       if (P.urea) out.co2 += kg * 0.20 * 44 / 12;                         // IPCC Vol.4 Pers. 11.13
+      var eh = parseID(r.efh);
+      out.up = kg * (isFinite(eh) && eh >= 0 ? eh : (P.up || 0));         // hulu → Cakupan 3
     } else if (r.jenis === 'organik') {
       FON = r.input === 'n' ? kg : kg * num(r.npct) / 100;
     } else if (r.jenis === 'kapur') out.co2 += kg * 0.12 * 44 / 12;       // Pers. 11.12
@@ -398,6 +499,75 @@ var GRK = (function () {
       out.kgN = FSN + FON;
     }
     return fin(out);
+  }
+
+  /* ---- Gambut dikeringkan ---- */
+  function peatLine(r, opt) {
+    var out = zero(), P = PEAT[r.guna] || PEAT.sawit, g = GWP[opt.gwp], A = num(r.ha); if (!A) return out;
+    var fd = r.parit === false || r.parit === 'tidak' ? 0 : PEAT_FDITCH;
+    out.co2 = A * (P.co2c + PEAT_DOC) * 44 / 12 * 1000;                       // on-site + DOC
+    out.ch4 = A * ((1 - fd) * P.ch4 + fd * PEAT_DITCH) * g.CH4_nf;
+    out.n2o = A * P.n2o * 44 / 28 * g.N2O;
+    out.ha = A; return fin(out);
+  }
+  /* ---- Ternak terintegrasi ---- */
+  function nexHead(r) { var T = TERNAK[r.jenis] || TERNAK.sapi; var bb = num(r.bb) || T.bb; return T.nrate * bb / 1000 * 365; }
+  function ternakLine(r, opt) {
+    var out = zero(), T = TERNAK[r.jenis] || TERNAK.sapi, g = GWP[opt.gwp], S = N2O_SET[opt.n2oSet] || N2O_SET.ipcc2019;
+    var n = num(r.ekor); if (!n) return out;
+    out.ch4 = n * (T.ent + T.mm) * g.CH4_nf;
+    var nex = n * nexHead(r), n2oN = 0;
+    if (r.sistem === 'kandang') {
+      n2oN = nex * 0.005;                                                     // penyimpanan padat (Tabel 10.21)
+      if (r.aplikasi !== false && r.aplikasi !== 'tidak') n2oN += nex * (S.EF1o + S.GASM * S.EF4 + S.LEACH * S.EF5);
+    } else n2oN = nex * (S[T.prp] + S.GASM * S.EF4 + S.LEACH * S.EF5);       // dilepas di kebun (PRP)
+    out.n2oKg = n2oN * 44 / 28; out.n2o = out.n2oKg * g.N2O; out.kgN = nex;
+    return fin(out);
+  }
+  /* ---- Limbah cair pengolahan ---- */
+  function limbahLine(r, opt) {
+    var out = zero(), L = LIMBAH[r.jenis] || LIMBAH.pome, g = GWP[opt.gwp], cod = 0;
+    if (r.mode === 'cod') cod = num(r.kgcod);
+    else {
+      var m3 = num(r.m3t) || (L.m3 || 0), c = num(r.cod) || (L.cod || 0);
+      cod = num(r.prod) * m3 * c;
+    }
+    if (!cod) return out;
+    var M = MCF[r.olah] || MCF.dalam, gen = cod * 0.25 * M.v;
+    var cap = r.olah === 'digester' || r.olah === 'dalam' || r.olah === 'dangkal' ? Math.min(Math.max(num(r.tangkap), 0), 100) / 100 : 0;
+    var D = DESTRUKSI[r.musnah] || DESTRUKSI.tidak;
+    var rec = gen * cap * D.v;
+    out.ch4Kg = gen - rec; out.ch4 = out.ch4Kg * g.CH4_nf; out.kgCOD = cod; out.recKg = rec;
+    return fin(out);
+  }
+  /* ---- Pembakaran terbuka sisa tanaman ---- */
+  function bakarLine(r, opt) {
+    var out = zero(), g = GWP[opt.gwp], dm = r.mode === 'tebu' ? num(r.ha) * BAKAR.tebuMB * BAKAR.tebuCF : num(r.tbk);
+    if (!dm) return out;
+    out.ch4 = dm * BAKAR.ch4 * g.CH4_nf; out.n2o = dm * BAKAR.n2o * g.N2O; out.dm = dm;
+    return fin(out);
+  }
+  /* ---- Alih guna lahan (amortisasi linier, GHG Protocol LSR Standard) ---- */
+  function cBefore(r) { var T = TUTUPAN[r.dari] || TUTUPAN.hlks; return T.agb === null ? num(r.cdari) : T.agb * CF_C; }
+  function cAfter(r) { var C = CROPC[r.ke] || CROPC.sawit; return C.Lmean === null ? num(r.cke) : C.Lmean; }
+  function lucWeight(k, N) { return k >= 0 && k < N ? (2 * (N - k) - 1) / (N * N) : 0; }
+  function lucLine(r, opt) {
+    var out = zero(), A = num(r.ha), yr = parseInt(r.tahun, 10), rep = parseInt(opt.tahun, 10);
+    if (!A || !yr || !rep) return out;
+    var N = Math.max(20, parseInt(r.periode, 10) || (CROPC[r.ke] || {}).siklus || 20);
+    var dC = Math.max(0, cBefore(r) - cAfter(r));
+    out.lucTotal = A * dC * 44 / 12 * 1000;                                   // kg CO2 total
+    out.w = lucWeight(rep - yr, N); out.N = N;
+    out.co2 = out.lucTotal * out.w;
+    return fin(out);
+  }
+  /* ---- Neraca karbon biomassa tanaman (memo, tidak dijumlahkan) ---- */
+  function bioLine(r) {
+    var out = zero(), C = CROPC[r.tanaman] || CROPC.sawit;
+    var G = C.G === null ? num(r.g) : C.G, Lmax = C.Lmax === null ? num(r.lmax) : C.Lmax;
+    out.removal = num(r.haTumbuh) * G * 44 / 12 * 1000;                       // kg CO2 diserap
+    out.loss = num(r.haRemaja) * Lmax * 44 / 12 * 1000;                       // kg CO2 dilepas saat peremajaan
+    return out;
   }
 
   /* ---- Listrik (cakupan 2) ---- */
@@ -423,16 +593,27 @@ var GRK = (function () {
 
   /* ---- Inventaris lengkap ---- */
   function compute(st) {
-    var opt = st.opt, lines = [];
-    (st.stat || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Pembakaran stasioner', ref: ['stat', i], r: r, e: fuelLine(r, opt) }); });
-    (st.mob || []).forEach(function (r, i) { var rr = Object.assign({}, r, { mode: 'mob' }); lines.push({ s: 1, kat: 'Pembakaran bergerak', ref: ['mob', i], r: r, e: fuelLine(rr, opt) }); });
-    (st.ref || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Refrigeran & SF6 (fugitif)', ref: ['ref', i], r: r, e: refrigLine(r, opt) }); });
-    (st.agri || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Pertanian (pupuk, kapur)', ref: ['agri', i], r: r, e: agriLine(r, opt) }); });
+    var opt = Object.assign({}, st.opt, { tahun: st.org && st.org.tahun }), lines = [];
+    (st.stat || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Energi · pembakaran stasioner', grp: 'energi', ref: ['stat', i], r: r, e: fuelLine(r, opt) }); });
+    (st.mob || []).forEach(function (r, i) { var rr = Object.assign({}, r, { mode: 'mob' }); lines.push({ s: 1, kat: 'Energi · pembakaran bergerak', grp: 'energi', ref: ['mob', i], r: r, e: fuelLine(rr, opt) }); });
+    (st.ref || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Fugitif · refrigeran & SF6', grp: 'fugitif', ref: ['ref', i], r: r, e: refrigLine(r, opt) }); });
+    (st.agri || []).forEach(function (r, i) {
+      var e = agriLine(r, opt); lines.push({ s: 1, kat: 'Pertanian · pupuk, kapur & bahan organik', grp: 'tani', kebun: 1, ref: ['agri', i], r: r, e: e });
+      if (e.up) { var u = zero(); u.co2e = u.other = e.up; lines.push({ s: 3, kat: 'Cakupan 3 · 1 Barang & jasa dibeli (produksi pupuk)', kebun: 1, ref: ['agri', i, 'up'], r: r, e: u }); }
+    });
+    (st.ternak || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Pertanian · ternak & kotoran', grp: 'tani', kebun: 1, ref: ['ternak', i], r: r, e: ternakLine(r, opt) }); });
+    (st.peat || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Lahan · drainase gambut', grp: 'lahan', kebun: 1, ref: ['peat', i], r: r, e: peatLine(r, opt) }); });
+    (st.limbah || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Limbah · limbah cair pengolahan', grp: 'limbah', kebun: 1, ref: ['limbah', i], r: r, e: limbahLine(r, opt) }); });
+    (st.bakar || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Pertanian · pembakaran sisa tanaman', grp: 'tani', kebun: 1, ref: ['bakar', i], r: r, e: bakarLine(r, opt) }); });
+    (st.luc || []).forEach(function (r, i) { lines.push({ s: 1, kat: 'Lahan · alih guna lahan (amortisasi)', grp: 'lahan', kebun: 1, ref: ['luc', i], r: r, e: lucLine(r, opt) }); });
     (st.elec || []).forEach(function (r, i) { lines.push({ s: 2, kat: 'Listrik dibeli', ref: ['elec', i], r: r, e: elecLine(r) }); });
     (st.s3 || []).forEach(function (r, i) { lines.push({ s: 3, kat: 'Cakupan 3 · ' + (r.cat || ''), ref: ['s3', i], r: r, e: s3Line(r) }); });
-    var T = { s1: 0, s2: 0, s2m: 0, s3: 0, co2: 0, ch4: 0, n2o: 0, fgas: 0, bio: 0, memo: 0, other: 0, kat: {} };
+    var T = { s1: 0, s2: 0, s2m: 0, s3: 0, co2: 0, ch4: 0, n2o: 0, fgas: 0, bio: 0, memo: 0, other: 0, kat: {}, kebun: 0, kebunKat: {}, removal: 0, loss: 0, grp: {} };
+    (st.bio || []).forEach(function (r) { var b = bioLine(r); T.removal += b.removal; T.loss += b.loss; });
     lines.forEach(function (l) {
       var e = l.e;
+      if (l.grp) T.grp[l.grp] = (T.grp[l.grp] || 0) + e.co2e;
+      if (l.kebun) { T.kebun += e.co2e; T.kebunKat[l.kat] = (T.kebunKat[l.kat] || 0) + e.co2e; }
       T['s' + l.s] += e.co2e;
       if (l.s === 2) T.s2m += e.market;
       if (l.s !== 3) { T.co2 += e.co2; T.ch4 += e.ch4; T.n2o += e.n2o; T.fgas += e.fgas; } else T.other += e.co2e;
@@ -444,6 +625,8 @@ var GRK = (function () {
   }
 
   return { GWP: GWP, FUELS: FUELS, FAME: FAME, ETANOL: ETANOL, GRID: GRID, REFRIG: REFRIG, EQUIP: EQUIP, N2O_SET: N2O_SET, PUPUK: PUPUK, SCOPE3_CAT: SCOPE3_CAT, UNIT_LABEL: UNIT_LABEL,
+    ORGANIK: ORGANIK, CROPC: CROPC, KOMODITAS: KOMODITAS, PEAT: PEAT, PEAT_DOC: PEAT_DOC, PEAT_DITCH: PEAT_DITCH, PEAT_FDITCH: PEAT_FDITCH, TERNAK: TERNAK, LIMBAH: LIMBAH, MCF: MCF, DESTRUKSI: DESTRUKSI, TUTUPAN: TUTUPAN, CF_C: CF_C, BAKAR: BAKAR,
+    peatLine: peatLine, ternakLine: ternakLine, nexHead: nexHead, limbahLine: limbahLine, bakarLine: bakarLine, lucLine: lucLine, lucWeight: lucWeight, cBefore: cBefore, cAfter: cAfter, bioLine: bioLine,
     fuelLine: fuelLine, refrigLine: refrigLine, refrigGWP: refrigGWP, agriLine: agriLine, elecLine: elecLine, gridEF: gridEF, compute: compute, num: num, parseID: parseID };
 })();
 if (typeof module !== 'undefined') module.exports = GRK;
@@ -462,8 +645,11 @@ const blendFor = y => { y = +y; return y >= 2027 ? 50 : y === 2026 ? 45 : y === 
 /* ---------- status ---------- */
 function blank() {
   return { sample: false, org: { nama: '', tahun: String(new Date().getFullYear()), lokasi: '', batas: 'operasional', output: '', outUnit: '' },
-    opt: { gwp: 'AR5', sektor: 'ind', n2oSet: 'ipcc2019', indirect: true }, stat: [], mob: [], ref: [], agri: [], elec: [], s3: [] };
+    opt: { gwp: 'AR5', sektor: 'ind', n2oSet: 'ipcc2019', indirect: true }, kebun: { kom: 'sawit', luas: '', prod: '', energi: true },
+    stat: [], mob: [], ref: [], agri: [], elec: [], s3: [], ternak: [], peat: [], limbah: [], bakar: [], luc: [], bio: [] };
 }
+const ARR = ['stat', 'mob', 'ref', 'agri', 'elec', 's3', 'ternak', 'peat', 'limbah', 'bakar', 'luc', 'bio'];
+function migrate(s) { const b = blank(); ARR.forEach(k => { if (!Array.isArray(s[k])) s[k] = []; }); s.kebun = Object.assign(b.kebun, s.kebun || {}); return s; }
 function sample() {
   const s = blank();
   Object.assign(s.org, { nama: 'CV Contoh Rempah Nusantara', tahun: '2026', lokasi: 'Bogor, Jawa Barat', output: '850', outUnit: 'ton produk' });
@@ -471,16 +657,21 @@ function sample() {
   s.stat = [{ fuel: 'diesel', qty: '2.400', unit: 'L', blend: 45, ket: 'Genset cadangan' }, { fuel: 'lpg', qty: '96', unit: 'tb12', ket: 'Pengering & dapur' }, { fuel: 'biomass', qty: '35', unit: 't', ket: 'Tungku cangkang' }];
   s.mob = [{ fuel: 'diesel', qty: '7.800', unit: 'L', blend: 45, ket: 'Truk angkut 2 unit' }, { fuel: 'gasoline', qty: '', unit: 'L', blend: 0, km: '18.000', kmpl: '35', ket: 'Motor kurir (data km)' }];
   s.ref = [{ gas: 'R-32', metode: 'screening', alat: 'ac', unit: '8', charge: '0,9', leak: '', ket: 'AC kantor' }, { gas: 'R-404A', metode: 'isi', kg: '6', ket: 'Isi ulang cold storage' }];
-  s.agri = [{ jenis: 'pupuk', pupuk: 'npk15', kg: '1.200', ket: 'Kebun inti' }, { jenis: 'pupuk', pupuk: 'urea', kg: '400', ket: '' }, { jenis: 'dolomit', kg: '2.000', ket: '' }];
+  s.agri = [{ jenis: 'pupuk', pupuk: 'npk15', kg: '1.200', ket: 'Kebun inti' }, { jenis: 'pupuk', pupuk: 'urea', kg: '400', ket: '' }, { jenis: 'organik', bahan: 'kandang', input: 'pupuk', kg: '8.000', npct: '1,5', ket: 'Pupuk kandang kambing (uji lab)' }, { jenis: 'dolomit', kg: '2.000', ket: '' }];
+  s.kebun = { kom: 'pala', luas: '120', prod: '60', energi: true };
+  s.ternak = [{ jenis: 'kambing', ekor: '40', sistem: 'kandang', aplikasi: 'ya', bb: '', ket: 'Kambing di bawah tegakan pala' }];
+  s.bio = [{ tanaman: 'multistrata', haTumbuh: '120', haRemaja: '', ket: 'Kebun pala agroforestri' }];
   s.elec = [{ grid: 'jamali', margin: 'cm', qty: '142.000', unit: 'kWh', rec: '', ket: 'Pabrik & kantor' }];
   s.s3 = [{ cat: E.SCOPE3_CAT[5], desc: 'Penerbangan domestik', qty: '24.000', satuan: 'penumpang-km', ef: '0,13552', sumber: 'DESNZ (UK) 2025, penerbangan domestik, tanpa RF' }];
   return s;
 }
 let st = null;
 try { st = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
-if (!st || !st.opt || !st.org) st = sample();
+if (!st || !st.opt || !st.org || (st.sample && !st.kebun)) st = sample();
+st = migrate(st);
 let tab = 'profil';
 try { tab = localStorage.getItem(KEY + '-tab') || (st.sample ? 's1' : 'profil'); } catch (e) {}
+if (tab === 'kebun') tab = 's1';
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
 
 /* ---------- kontrol formulir ---------- */
@@ -516,13 +707,44 @@ const SEC = {
       if (r.metode === 'screening') { const q = E.EQUIP[r.alat] || E.EQUIP.ac; h += sel('ref', i, 'alat', r.alat, Object.keys(E.EQUIP).map(k => [k, E.EQUIP[k].nama]), 'Jenis peralatan', 'w2') + inp('ref', i, 'unit', r.unit, 'Jumlah unit') + inp('ref', i, 'charge', r.charge, 'Muatan per unit (kg)', 'lihat label unit') + inp('ref', i, 'leak', r.leak, 'Laju bocor %/tahun', 'bawaan ' + nf(q.leak * 100, 1), 'w0'); }
       else h += inp('ref', i, 'kg', r.kg, 'kg diisi ulang setahun', '0');
       return h + txt('ref', i, 'ket', r.ket, 'Keterangan', 'mis. AC ruang rapat'); } },
-  agri: { title: 'Pertanian · pupuk, kapur & dolomit', help: 'N₂O dari pemupukan nitrogen (langsung + tidak langsung) serta CO₂ dari urea dan pengapuran. Untuk kebun/lahan yang dikelola sendiri.', add: 'Tambah input',
-    row: r => ({ jenis: 'pupuk', pupuk: 'urea', kg: '', npct: '', input: 'pupuk', ket: '' }),
-    fields: (r, i) => { let h = sel('agri', i, 'jenis', r.jenis, [['pupuk', 'Pupuk N sintetis'], ['organik', 'Pupuk organik / kompos / kandang'], ['kapur', 'Kapur pertanian (kalsit)'], ['dolomit', 'Dolomit']], 'Jenis input', 'w2');
-      if (r.jenis === 'pupuk') { h += sel('agri', i, 'pupuk', r.pupuk, Object.keys(E.PUPUK).map(k => [k, E.PUPUK[k].nama]), 'Pupuk', 'w2') + inp('agri', i, 'kg', r.kg, 'kg pupuk setahun'); if (r.pupuk === 'custom') h += inp('agri', i, 'npct', r.npct, 'Kadar N (%)', '', 'w0'); }
-      else if (r.jenis === 'organik') { h += sel('agri', i, 'input', r.input, [['pupuk', 'kg pupuk + % N'], ['n', 'kg N langsung']], 'Data yang dimiliki') + inp('agri', i, 'kg', r.kg, r.input === 'n' ? 'kg N setahun' : 'kg pupuk organik'); if (r.input !== 'n') h += inp('agri', i, 'npct', r.npct, 'Kadar N (%)', 'dari uji lab', 'w0'); }
+  agri: { title: 'Pupuk kimia, bahan organik, kapur & dolomit', help: 'N₂O dari nitrogen pupuk (langsung + tidak langsung via penguapan & pencucian), CO₂ dari urea dan pengapuran. Emisi pabrik pembuat pupuk dicatat di Cakupan 3.', add: 'Tambah pupuk / bahan organik',
+    row: r => ({ jenis: 'pupuk', pupuk: 'urea', kg: '', npct: '', input: 'pupuk', bahan: 'kandang', efh: '', ket: '' }),
+    fields: (r, i) => { let h = sel('agri', i, 'jenis', r.jenis, [['pupuk', 'Pupuk kimia (anorganik)'], ['organik', 'Bahan organik (kandang, kompos, tankos, LCPKS, kulit buah)'], ['kapur', 'Kapur pertanian (kalsit)'], ['dolomit', 'Dolomit']], 'Jenis input', 'w2');
+      if (r.jenis === 'pupuk') { const P = E.PUPUK[r.pupuk] || E.PUPUK.urea; h += sel('agri', i, 'pupuk', r.pupuk, Object.keys(E.PUPUK).map(k => [k, E.PUPUK[k].nama]), 'Pupuk', 'w2') + inp('agri', i, 'kg', r.kg, 'kg pupuk setahun'); if (r.pupuk === 'custom') h += inp('agri', i, 'npct', r.npct, 'Kadar N (%)', '', 'w0'); h += inp('agri', i, 'efh', r.efh, 'Emisi produksi (kg CO₂e/kg)', P.up ? 'bawaan ' + nf(P.up, 3) + ' (EPD)' : 'opsional, dari EPD', 'w0'); }
+      else if (r.jenis === 'organik') { h += sel('agri', i, 'bahan', r.bahan, Object.keys(E.ORGANIK).map(k => [k, E.ORGANIK[k]]), 'Bahan', 'w2', 0) + sel('agri', i, 'input', r.input, [['pupuk', 'kg bahan + % N'], ['n', 'kg N langsung']], 'Data yang dimiliki') + inp('agri', i, 'kg', r.kg, r.input === 'n' ? 'kg N setahun' : 'kg bahan setahun'); if (r.input !== 'n') h += inp('agri', i, 'npct', r.npct, 'Kadar N (%)', 'dari uji lab', 'w0'); }
       else h += inp('agri', i, 'kg', r.kg, 'kg setahun');
       return h + txt('agri', i, 'ket', r.ket, 'Keterangan', 'mis. blok kebun 3'); } },
+  ternak: { title: 'Ternak terintegrasi & kotoran hewan', help: 'Sapi, kerbau, kambing, atau domba yang dipelihara di kebun (mis. integrasi sawit-sapi). Dihitung: CH₄ fermentasi enterik, CH₄ kotoran, dan N₂O dari kotoran. Kotoran yang dipakai sebagai pupuk sudah dihitung di sini, jangan dimasukkan lagi di baris pupuk.', add: 'Tambah ternak',
+    row: r => ({ jenis: 'sapi', ekor: '', sistem: 'lepas', aplikasi: 'ya', bb: '', ket: '' }),
+    fields: (r, i) => { const T = E.TERNAK[r.jenis] || E.TERNAK.sapi; let h = sel('ternak', i, 'jenis', r.jenis, Object.keys(E.TERNAK).map(k => [k, E.TERNAK[k].nama]), 'Jenis ternak') + inp('ternak', i, 'ekor', r.ekor, 'Jumlah ekor (rata-rata setahun)') + sel('ternak', i, 'sistem', r.sistem, [['lepas', 'Dilepas / digembalakan di kebun'], ['kandang', 'Dikandangkan, kotoran ditumpuk']], 'Pemeliharaan', 'w2');
+      if (r.sistem === 'kandang') h += sel('ternak', i, 'aplikasi', r.aplikasi, [['ya', 'Kotoran dipakai sebagai pupuk kebun'], ['tidak', 'Kotoran dijual / dibawa keluar']], 'Nasib kotoran', 'w2', 0);
+      return h + inp('ternak', i, 'bb', r.bb, 'Bobot badan rata-rata (kg)', 'bawaan ' + T.bb, 'w0') + txt('ternak', i, 'ket', r.ket, 'Keterangan', 'mis. integrasi sawit-sapi blok A'); } },
+  peat: { title: 'Lahan gambut yang dikeringkan', help: 'Gambut yang didrainase terus melepaskan CO₂ dari oksidasi gambut, CO₂ dari karbon terlarut, CH₄ dari parit, dan N₂O, setiap tahun selama masih kering. Isi hanya luas kebun yang berada di tanah gambut.', add: 'Tambah blok gambut',
+    row: r => ({ guna: 'sawit', ha: '', parit: 'ya', ket: '' }),
+    fields: (r, i) => sel('peat', i, 'guna', r.guna, Object.keys(E.PEAT).map(k => [k, E.PEAT[k].nama]), 'Penggunaan lahan', 'w2', 0) + inp('peat', i, 'ha', r.ha, 'Luas di gambut (ha)') + sel('peat', i, 'parit', r.parit, [['ya', 'Ada parit drainase'], ['tidak', 'Tanpa parit terbuka']], 'Parit', '', 0) + txt('peat', i, 'ket', r.ket, 'Keterangan', 'mis. afdeling 4, kedalaman gambut') },
+  limbah: { title: 'Limbah cair pengolahan hasil kebun', help: 'Metana dari limbah cair organik yang diolah anaerob: POME pabrik kelapa sawit, olah basah kopi, pabrik karet, dan lainnya. Emisi = COD × 0,25 × MCF − metana yang ditangkap dan dimusnahkan.', add: 'Tambah limbah cair',
+    row: r => ({ jenis: 'pome', mode: 'prod', prod: '', m3t: '', cod: '', kgcod: '', olah: 'dalam', tangkap: '', musnah: 'tidak', ket: '' }),
+    fields: (r, i) => { const L = E.LIMBAH[r.jenis] || E.LIMBAH.pome; let h = sel('limbah', i, 'jenis', r.jenis, Object.keys(E.LIMBAH).map(k => [k, E.LIMBAH[k].nama]), 'Jenis limbah', 'w2') + sel('limbah', i, 'mode', r.mode, [['prod', 'Dari jumlah bahan diolah'], ['cod', 'Dari total COD terukur']], 'Cara hitung');
+      if (r.mode === 'cod') h += inp('limbah', i, 'kgcod', r.kgcod, 'Total COD masuk kolam (kg/th)');
+      else h += inp('limbah', i, 'prod', r.prod, 'Jumlah ' + L.basis) + inp('limbah', i, 'm3t', r.m3t, 'Limbah (m³/ton)', L.m3 ? 'bawaan ' + nf(L.m3, 2) : 'wajib diisi', 'w0') + inp('limbah', i, 'cod', r.cod, 'COD (kg/m³ = g/L)', L.cod ? 'bawaan ' + L.cod : 'dari uji lab', 'w0');
+      h += sel('limbah', i, 'olah', r.olah, Object.keys(E.MCF).map(k => [k, E.MCF[k].nama + ' · MCF ' + nf(E.MCF[k].v, 1)]), 'Pengolahan', 'w2');
+      if (r.olah !== 'aerob') h += inp('limbah', i, 'tangkap', r.tangkap, 'Biogas tertangkap (%)', '0', 'w0') + sel('limbah', i, 'musnah', r.musnah, Object.keys(E.DESTRUKSI).map(k => [k, E.DESTRUKSI[k].nama]), 'Pemusnahan metana', '', 0);
+      return h + txt('limbah', i, 'ket', r.ket, 'Keterangan', 'mis. PKS 45 t TBS/jam'); } },
+  bakar: { title: 'Pembakaran terbuka sisa tanaman', help: 'CH₄ dan N₂O dari pembakaran daun tebu sebelum panen atau sisa tanaman lain. CO₂-nya biogenik, sehingga tidak dihitung. Pembakaran untuk membuka lahan dilarang dan tidak dihitung di sini.', add: 'Tambah pembakaran',
+    row: r => ({ mode: 'tebu', ha: '', tbk: '', ket: '' }),
+    fields: (r, i) => sel('bakar', i, 'mode', r.mode, [['tebu', 'Daun tebu sebelum panen (berdasarkan luas)'], ['bk', 'Sisa tanaman lain (ton bahan kering)']], 'Jenis', 'w2') + (r.mode === 'tebu' ? inp('bakar', i, 'ha', r.ha, 'Luas dibakar (ha)') : inp('bakar', i, 'tbk', r.tbk, 'Bahan kering terbakar (ton)')) + txt('bakar', i, 'ket', r.ket, 'Keterangan', '') },
+  luc: { title: 'Alih guna lahan (pembukaan kebun)', help: 'Kehilangan karbon biomassa saat hutan atau semak dibuka menjadi kebun. Sesuai GHG Protocol LSR Standard, emisi disebar ke 20 tahun, atau sepanjang siklus tanaman bila lebih panjang, dengan bobot linier. Konversi yang paling baru mendapat bobot terbesar.', add: 'Tambah riwayat pembukaan',
+    row: r => ({ ha: '', tahun: '', dari: 'hlks', cdari: '', ke: (E.KOMODITAS[st.kebun.kom] || {}).crop || 'sawit', cke: '', periode: '', ket: '' }),
+    fields: (r, i) => { let h = inp('luc', i, 'ha', r.ha, 'Luas dibuka (ha)') + inp('luc', i, 'tahun', r.tahun, 'Tahun pembukaan', 'mis. 2015', 'w0', 'numeric') + sel('luc', i, 'dari', r.dari, Object.keys(E.TUTUPAN).map(k => [k, E.TUTUPAN[k].nama + (E.TUTUPAN[k].agb ? ' · ' + nf(E.TUTUPAN[k].agb * E.CF_C, 1) + ' t C/ha' : '')]), 'Tutupan sebelumnya', 'w2');
+      if (r.dari === 'custom') h += inp('luc', i, 'cdari', r.cdari, 'Stok C sebelum (t C/ha)', '', 'w0');
+      h += sel('luc', i, 'ke', r.ke, Object.keys(E.CROPC).map(k => [k, E.CROPC[k].nama]), 'Menjadi', 'w2');
+      if (r.ke === 'custom') h += inp('luc', i, 'cke', r.cke, 'Stok C rata-rata kebun (t C/ha)', '', 'w0');
+      return h + inp('luc', i, 'periode', r.periode, 'Periode amortisasi (th)', 'otomatis ' + Math.max(20, (E.CROPC[r.ke] || {}).siklus || 20), 'w0', 'numeric') + txt('luc', i, 'ket', r.ket, 'Keterangan', 'mis. bukti citra/izin'); } },
+  bio: { title: 'Neraca karbon biomassa tanaman (dilaporkan terpisah)', help: 'Serapan CO₂ oleh tanaman yang sedang tumbuh, serta pelepasan saat peremajaan atau penebangan. Sesuai GHG Protocol LSR, serapan bersifat opsional dan dilaporkan terpisah, tidak mengurangi total emisi. Jangan masukkan blok yang sudah dihitung di "Alih guna lahan" dalam periode amortisasinya.', add: 'Tambah blok tanaman',
+    row: r => ({ tanaman: (E.KOMODITAS[st.kebun.kom] || {}).crop || 'sawit', g: '', lmax: '', haTumbuh: '', haRemaja: '', ket: '' }),
+    fields: (r, i) => { let h = sel('bio', i, 'tanaman', r.tanaman, Object.keys(E.CROPC).map(k => [k, E.CROPC[k].nama]), 'Sistem tanaman', 'w2');
+      if (r.tanaman === 'custom') h += inp('bio', i, 'g', r.g, 'Laju tumbuh (t C/ha/th)', '', 'w0') + inp('bio', i, 'lmax', r.lmax, 'Stok C saat diremajakan (t C/ha)', '', 'w0');
+      return h + inp('bio', i, 'haTumbuh', r.haTumbuh, 'Luas tanaman yang masih tumbuh (ha)', 'umur < siklus') + inp('bio', i, 'haRemaja', r.haRemaja, 'Luas diremajakan/ditebang tahun ini (ha)', '0') + txt('bio', i, 'ket', r.ket, 'Keterangan', ''); } },
   elec: { title: 'Listrik PLN & jaringan lain', help: 'Faktor emisi grid resmi ESDM (data 2019) per sistem interkoneksi. Isi REC PLN (MWh) bila punya, untuk perhitungan berbasis pasar.', add: 'Tambah sambungan',
     row: r => ({ grid: 'jamali', margin: 'cm', qty: '', unit: 'kWh', rec: '', ef: '', ket: '' }),
     fields: (r, i) => { let h = sel('elec', i, 'grid', r.grid, E.GRID.map(g => [g.id, g.nama]), 'Sistem jaringan', 'w2');
@@ -532,6 +754,39 @@ const SEC = {
     row: r => ({ cat: E.SCOPE3_CAT[0], desc: '', qty: '', satuan: '', ef: '', sumber: '' }),
     fields: (r, i) => sel('s3', i, 'cat', r.cat, E.SCOPE3_CAT.map(c => [c, c]), 'Kategori GHG Protocol', 'w2', 0) + txt('s3', i, 'desc', r.desc, 'Uraian', 'mis. pengiriman via ekspedisi') + inp('s3', i, 'qty', r.qty, 'Jumlah aktivitas') + txt('s3', i, 'satuan', r.satuan, 'Satuan', 'mis. ton-km', '') + inp('s3', i, 'ef', r.ef, 'Faktor (kg CO₂e/satuan)') + txt('s3', i, 'sumber', r.sumber, 'Sumber faktor', 'wajib diisi untuk audit') }
 };
+
+/* ---------- perkebunan: profil, panduan komoditas, ringkasan ---------- */
+const GUIDE = {
+  sawit: ['<b>Pupuk N</b> (urea, NPK) menghasilkan N₂O dan CO₂ urea. Emisi pabrik pupuk masuk Cakupan 3.', '<b>Gambut terdrainase</b> bisa menjadi sumber terbesar, sekitar 45 t CO₂e/ha/tahun dengan faktor default IPCC. Isi luas kebun yang berada di gambut.', '<b>POME di kolam anaerob terbuka</b> adalah sumber metana terbesar di PKS. Isi ton TBS diolah dan sistem pengolahannya. Penangkapan metana (digester, flare, genset) menurunkannya drastis.', '<b>Alih guna lahan</b>: isi riwayat pembukaan kebun dalam 25 tahun terakhir (siklus sawit).', 'Energi PKS dan kebun (solar, cangkang dan fiber di boiler) diisi di tab Cakupan 1. Listrik PLN diisi di Cakupan 2.', 'Tankos dan LCPKS yang dikembalikan ke lahan diisi sebagai bahan organik, dengan kadar N dari uji lab.'],
+  kopi: ['<b>Pupuk N</b> dan bahan organik (kulit/pulp kopi, pupuk kandang).', '<b>Olah basah</b>: limbah cair yang ditampung di kolam/lubang anaerob menghasilkan metana. Isi volume dan COD hasil uji lab.', '<b>Pengeringan dan sangrai</b> dengan kayu, LPG, atau solar diisi di Cakupan 1. Jemur matahari tidak menimbulkan emisi.', '<b>Pohon pelindung</b>: serapan karbon sistem kopi bernaung dicatat terpisah di neraca biomassa.'],
+  kakao: ['<b>Pupuk N</b> dan kulit buah kakao yang dikembalikan ke kebun (bahan organik).', '<b>Fermentasi dan pengeringan</b>: bahan bakar kayu atau solar diisi di Cakupan 1.', '<b>Agroforestri</b>: serapan tanaman bernaung dicatat di neraca biomassa.', '<b>Alih guna lahan</b> perlu diisi bila kebun dibuka dari hutan dalam 20 tahun terakhir.'],
+  karet: ['<b>Pupuk N</b> pada TBM dan TM.', '<b>Pengasapan RSS</b> dengan kayu bakar diisi di Cakupan 1 (kayu bakar). CH₄ dan N₂O dihitung, CO₂-nya biogenik.', '<b>Limbah cair pabrik</b> crumb rubber/lateks pekat diisi di limbah cair, dengan data COD.', '<b>Serapan biomassa karet</b> (IPCC: 3,0 t C/ha/th selama 27 tahun) dicatat terpisah.'],
+  kelapa: ['<b>Pengeringan kopra</b> dengan tempurung/sabut diisi di Cakupan 1 (biomassa padat).', '<b>Pupuk</b> dan bahan organik (sabut, pelepah).', '<b>Kelapa di gambut/lahan pasang surut</b>: isi di blok gambut, kategori tanaman budidaya lain.', 'IPCC belum memiliki nilai default biomassa kelapa monokultur. Untuk neraca biomassa, pakai nilai sendiri dari studi lokal, atau sistem multistrata bila kebun campur.'],
+  pala: ['<b>Agroforestri multistrata</b> (pala dengan tanaman lain): serapan IPCC 3,25 t C/ha/th dicatat terpisah.', '<b>Pengeringan/pengasapan biji dan fuli</b> dengan kayu bakar diisi di Cakupan 1 (kayu bakar).', '<b>Pupuk</b> umumnya sedikit. Isi pupuk kimia dan pupuk kandang bila ada.', '<b>Ternak</b> (kambing/sapi) di bawah tegakan diisi di bagian ternak.'],
+  teh: ['<b>Pupuk N dosis tinggi</b> adalah sumber N₂O utama di kebun.', '<b>Pelayuan dan pengeringan</b> butuh banyak energi (kayu, batubara, gas, listrik). Isi di Cakupan 1 dan 2.', 'Serapan biomassa teh menurut IPCC: 0,7 t C/ha/th.'],
+  tebu: ['<b>Bakar daun sebelum panen</b> diisi di pembakaran terbuka (default IPCC 6,5 t bahan kering/ha).', '<b>Pupuk N</b> (urea, ZA).', '<b>Pabrik gula</b>: bagasse di boiler diisi di Cakupan 1 (biomassa padat), limbah cair di limbah cair (jenis lain).'],
+  cengkeh: ['<b>Pupuk</b> dan bahan organik.', '<b>Pengeringan</b>: jemur matahari tidak menimbulkan emisi. Pengering berbahan bakar diisi di Cakupan 1.', 'Kebun campur/agroforestri: serapan dicatat di neraca biomassa (multistrata).'],
+  lada: ['<b>Pupuk</b> dan bahan organik. Tiang panjat hidup (gamal, dadap) menambah biomassa.', '<b>Pengolahan</b> (perendaman lada putih) dapat menghasilkan limbah cair organik.', '<b>Pengeringan</b> berbahan bakar diisi di Cakupan 1.'],
+  lain: ['Isi pupuk, bahan organik, ternak, gambut, limbah cair, dan riwayat pembukaan lahan yang relevan.', 'Energi pengolahan diisi di Cakupan 1 dan 2.']
+};
+function renderKebun() {
+  const k = st.kebun, K = E.KOMODITAS[k.kom] || E.KOMODITAS.lain;
+  $('#kebunFields').innerHTML = sel('kebun', -1, 'kom', k.kom, Object.keys(E.KOMODITAS).map(x => [x, E.KOMODITAS[x].nama]), 'Komoditas utama', 'w2') + inp('kebun', -1, 'luas', k.luas, 'Luas tertanam (ha)') + inp('kebun', -1, 'prod', k.prod, 'Produksi setahun (' + K.produk + ')') +
+    `<label class="f w2"><span>Intensitas per produk</span><span style="display:flex;gap:8px;align-items:center;min-height:44px"><input type="checkbox" data-sec="kebun" data-i="-1" data-k="energi"${k.energi !== false ? ' checked' : ''}> sertakan energi (BBM Cakupan 1 + listrik Cakupan 2)</span></label>`;
+  $('#kebunGuide').innerHTML = `<summary>Panduan sumber emisi: ${esc(K.nama.toLowerCase())} <span class="mute">(ubah komoditas di Profil)</span></summary><ul>${(GUIDE[k.kom] || GUIDE.lain).map(g => `<li>${g}</li>`).join('')}</ul>`;
+}
+function kebunSumHTML() {
+  const T = R.T, k = st.kebun, K = E.KOMODITAS[k.kom] || E.KOMODITAS.lain;
+  let en = 0; if (k.energi !== false) R.lines.forEach(l => { if (['stat', 'mob', 'elec'].includes(l.ref[0])) en += l.e.co2e; });
+  const tot = T.kebun + en, ha = E.num(k.luas), pr = E.num(k.prod);
+  const kat = Object.keys(T.kebunKat).filter(x => T.kebunKat[x]).sort((a, b) => T.kebunKat[b] - T.kebunKat[a]);
+  if (k.energi !== false && en) kat.push('Energi (BBM & listrik)');
+  const val = x => x === 'Energi (BBM & listrik)' ? en : T.kebunKat[x];
+  const mx = Math.max(1, ...kat.map(val));
+  return `<div class="card"><header><h3>Pertanian &amp; perkebunan · ${tot ? tt(tot) + ' t CO₂e' : 'belum ada data'}</h3><p>${ha ? `<b>${nf(tot / 1000 / ha, 2)}</b> t CO₂e/ha` : 'Isi luas untuk intensitas per ha'} · ${pr ? `<b>${nf(tot / 1000 / pr, 3)}</b> t CO₂e/${esc(K.produk)}` : 'isi produksi untuk intensitas per produk'}</p></header>
+   ${kat.map(x => `<div class="strip" style="grid-template-columns:minmax(0,1fr) auto"><span>${esc(x.replace(/^[^·]+· /, ''))}</span><b>${tt(val(x))} t</b><span class="sub" style="grid-column:1/3"><span style="display:block;height:6px;border-radius:2px;background:var(--red);width:${val(x) / mx * 100}%"></span></span></div>`).join('')}
+   ${T.removal || T.loss ? `<p class="memo" style="margin-top:12px">Neraca biomassa tanaman (terpisah, tidak mengurangi total): serapan ${tt(T.removal)} t CO₂ · pelepasan saat peremajaan ${tt(T.loss)} t CO₂ · bersih ${T.removal >= T.loss ? 'serapan' : 'emisi'} ${tt(Math.abs(T.removal - T.loss))} t CO₂.</p>` : ''}</div>`;
+}
 
 function renderSec(sec) {
   const S = SEC[sec], rows = st[sec];
@@ -558,12 +813,20 @@ function detail(l) {
   if (sec === 'stat' || sec === 'mob') { if (e.tj) d.push(nf(e.tj * 1000, 1) + ' GJ'); if (e.bio) d.push('CO₂ biogenik ' + tt(e.bio) + ' t'); if (sec === 'mob' && !E.num(r.qty) && E.num(r.km) && E.num(r.kmpl)) d.push('≈ ' + nf(E.num(r.km) / E.num(r.kmpl), 0) + ' L'); }
   if (sec === 'ref' && e.kgGas) d.push(nf(e.kgGas, 2) + ' kg gas' + (e.memo ? ' · memo, bukan gas Kyoto' : ''));
   if (sec === 'agri' && e.kgN) d.push(nf(e.kgN, 1) + ' kg N');
+  if (sec === 'agri' && e.up) d.push('produksi pupuk ' + tt(e.up) + ' t → Cakupan 3');
+  if (sec === 'ternak' && e.kgN) d.push('CH₄ ' + tt(e.ch4) + ' t CO₂e · N kotoran ' + nf(e.kgN, 0) + ' kg');
+  if (sec === 'peat' && e.ha) d.push(nf(e.co2e / 1000 / e.ha, 1) + ' t CO₂e/ha');
+  if (sec === 'limbah' && e.kgCOD) { d.push(nf(e.kgCOD / 1000, 1) + ' t COD · CH₄ ' + nf(e.ch4Kg / 1000, 1) + ' t'); if (e.recKg) d.push('dimusnahkan ' + nf(e.recKg / 1000, 1) + ' t CH₄'); }
+  if (sec === 'bakar' && e.dm) d.push(nf(e.dm, 1) + ' t bahan kering');
+  if (sec === 'luc' && e.lucTotal) d.push('total ' + tt(e.lucTotal) + ' t · bobot ' + nf(e.w * 100, 2) + '% (N ' + e.N + ')');
+  if (sec === 'luc' && !e.lucTotal && E.num(r.ha)) d.push('isi tahun & cek tahun pelaporan');
   if (sec === 'elec') { d.push(nf(e.ef, 2) + ' t/MWh'); if (E.num(r.rec)) d.push('pasar ' + tt(e.market) + ' t'); }
   return d.join(' · ');
 }
 function refresh() {
   R = E.compute(st);
-  R.lines.forEach(l => { const o = document.getElementById('o-' + l.ref[0] + '-' + l.ref[1]); if (o) { const v = l.e.memo && !l.e.co2e ? l.e.memo : l.e.co2e; o.querySelector('b').textContent = tt(v) + ' t'; o.querySelector('small').textContent = detail(l) || 'ton CO₂e'; } });
+  (st.bio || []).forEach((r, i) => { const o = document.getElementById('o-bio-' + i); if (o) { const b = E.bioLine(r); o.querySelector('b').textContent = (b.removal ? '−' : '') + tt(b.removal) + ' t'; o.querySelector('small').textContent = 'CO₂ diserap' + (b.loss ? ' · dilepas ' + tt(b.loss) + ' t' : '') + ' · memo'; } });
+  R.lines.forEach(l => { const o = l.ref[2] ? null : document.getElementById('o-' + l.ref[0] + '-' + l.ref[1]); if (o) { const v = l.e.memo && !l.e.co2e ? l.e.memo : l.e.co2e; o.querySelector('b').textContent = tt(v) + ' t'; o.querySelector('small').textContent = detail(l) || 'ton CO₂e'; } });
   const T = R.T, tot = T.total || 0;
   $('#total').textContent = tt(tot); $('#btotal').textContent = tt(tot);
   $('#who').textContent = 'Total emisi' + (st.org.nama ? ' · ' + st.org.nama : '') + (st.org.tahun ? ' · ' + st.org.tahun : '');
@@ -572,11 +835,13 @@ function refresh() {
   const bars = $('#sbar').children; [T.s1, T.s2, T.s3].forEach((v, i) => bars[i].style.width = pc(v) + '%');
   $('#sbar').setAttribute('aria-label', `Cakupan 1 ${nf(pc(T.s1), 0)}%, Cakupan 2 ${nf(pc(T.s2), 0)}%, Cakupan 3 ${nf(pc(T.s3), 0)}%`);
   const out = E.num(st.org.output);
-  $('#strips').innerHTML = [['c1', 'Cakupan 1 · langsung', T.s1, 'BBM, refrigeran, pupuk'], ['c2', 'Cakupan 2 · listrik', T.s2, 'berbasis pasar: ' + tt(T.s2m) + ' t'], ['c3', 'Cakupan 3 · rantai nilai', T.s3, 'opsional']]
+  $('#strips').innerHTML = [['c1', 'Cakupan 1 · langsung', T.s1, 'BBM, refrigeran, kebun & lahan'], ['c2', 'Cakupan 2 · listrik', T.s2, 'berbasis pasar: ' + tt(T.s2m) + ' t'], ['c3', 'Cakupan 3 · rantai nilai', T.s3, 'opsional']]
     .map(([c, n, v, s]) => `<div class="strip"><span class="sw ${c}"></span><span>${n}</span><b>${tt(v)} t · ${nf(pc(v), 0)}%</b><span class="sub">${s}</span></div>`).join('') +
     (out ? `<div class="strip"><span></span><span>Intensitas emisi</span><b>${nf(tot / out, tot / out < 10 ? 2 : 1)} kg/${esc(st.org.outUnit || 'unit')}</b><span class="sub">Cakupan 1 + 2 + 3 dibagi output</span></div>` : '');
   $('#gas').innerHTML = [['CO₂', T.co2], ['CH₄', T.ch4], ['N₂O', T.n2o], ['HFC/SF₆', T.fgas]].map(([g, v]) => `<div><span>${g}</span><b>${tt(v)} t</b></div>`).join('');
   $('#memo').innerHTML = (T.bio ? `<p class="memo">CO₂ biogenik ${tt(T.bio)} t: dari biodiesel, etanol dan biomassa. Dilaporkan terpisah, tidak masuk total.</p>` : '') + (T.memo ? `<p class="memo">R-22 (HCFC) ${tt(T.memo)} t CO₂e: gas Protokol Montreal, dicatat sebagai memo.</p>` : '') + (T.s3 ? `<p class="memo">Gas per jenis hanya untuk Cakupan 1 & 2. Cakupan 3 dicatat sebagai CO₂e total.</p>` : '');
+  const ups = R.lines.filter(l => l.ref[2] === 'up');
+  $('#s3auto').innerHTML = `<header><h3>Otomatis dari Cakupan 1</h3><p>Emisi produksi pupuk (kategori 1, barang & jasa dibeli) dihitung otomatis dari baris pupuk di Cakupan 1. Ubah faktornya di sana.</p></header>` + (ups.length ? ups.map(l => `<div class="strip" style="grid-template-columns:minmax(0,1fr) auto"><span>${esc(srcName(l))} · ${esc(actText(l))}</span><b>${tt(l.e.co2e)} t</b></div>`).join('') : '<p class="empty">Belum ada pupuk dengan faktor emisi produksi.</p>');
   if (tab === 'hasil') renderHasil();
 }
 
@@ -584,7 +849,12 @@ function srcName(l) {
   const r = l.r, s = l.ref[0];
   if (s === 'stat' || s === 'mob') { const f = E.FUELS[r.fuel]; let n = f ? f.nama : '?'; if (f && f.blend === 'fame') n += ' B' + (r.blend || 0); if (f && f.blend === 'etanol' && +r.blend) n += ' E' + r.blend; return n; }
   if (s === 'ref') return (E.REFRIG[r.gas] || {}).nama || r.gas;
-  if (s === 'agri') return r.jenis === 'pupuk' ? (E.PUPUK[r.pupuk] || {}).nama : ({ organik: 'Pupuk organik', kapur: 'Kapur pertanian', dolomit: 'Dolomit' })[r.jenis];
+  if (s === 'agri') { const n = r.jenis === 'pupuk' ? (E.PUPUK[r.pupuk] || {}).nama : r.jenis === 'organik' ? (E.ORGANIK[r.bahan] || 'Bahan organik') : ({ kapur: 'Kapur pertanian', dolomit: 'Dolomit' })[r.jenis]; return l.ref[2] ? 'Produksi pupuk: ' + n : n; }
+  if (s === 'ternak') return (E.TERNAK[r.jenis] || {}).nama + (r.sistem === 'kandang' ? ' (dikandangkan)' : ' (dilepas di kebun)');
+  if (s === 'peat') return 'Gambut: ' + ((E.PEAT[r.guna] || {}).nama || '');
+  if (s === 'limbah') return (E.LIMBAH[r.jenis] || {}).nama + ' · ' + ((E.MCF[r.olah] || {}).nama || '');
+  if (s === 'bakar') return r.mode === 'tebu' ? 'Bakar daun tebu' : 'Bakar sisa tanaman';
+  if (s === 'luc') return `${(E.TUTUPAN[r.dari] || {}).nama} → ${(E.CROPC[r.ke] || {}).nama} (${r.tahun || '?'})`;
   if (s === 'elec') return 'Grid ' + ((E.GRID.find(g => g.id === r.grid) || {}).nama || '');
   return r.desc || r.cat;
 }
@@ -594,28 +864,36 @@ function actText(l) {
   if (s === 'ref') return r.metode === 'screening' ? `${r.unit || 0} unit × ${r.charge || 0} kg` : (r.kg || 0) + ' kg';
   if (s === 'agri') return (r.kg || 0) + (r.jenis === 'organik' && r.input === 'n' ? ' kg N' : ' kg');
   if (s === 'elec') return (r.qty || 0) + ' ' + r.unit;
+  if (s === 'ternak') return (r.ekor || 0) + ' ekor';
+  if (s === 'peat' || s === 'luc') return (r.ha || 0) + ' ha';
+  if (s === 'limbah') return r.mode === 'cod' ? (r.kgcod || 0) + ' kg COD' : (r.prod || 0) + ' ' + (E.LIMBAH[r.jenis] || {}).basis;
+  if (s === 'bakar') return r.mode === 'tebu' ? (r.ha || 0) + ' ha' : (r.tbk || 0) + ' t bk';
   return (r.qty || 0) + ' ' + (r.satuan || '');
 }
 const BATAS = { operasional: 'kendali operasional', finansial: 'kendali finansial', ekuitas: 'bagian ekuitas' };
 function statement() {
   const o = st.org, p = st.opt, T = R.T;
-  return `Inventarisasi emisi GRK ${o.nama || 'organisasi'} tahun ${o.tahun || '-'} disusun mengikuti GHG Protocol Corporate Standard dan ISO 14064-1:2018 dengan pendekatan batas ${BATAS[o.batas]}. Emisi dihitung dengan metode IPCC 2006 Guidelines dan 2019 Refinement (Tier 1, faktor default) sesuai acuan IPCC yang diamanatkan Permen LH/BPLH No. 7/2026, pelaksana Perpres No. 110/2025. Konversi ke CO₂e memakai GWP 100 tahun IPCC ${p.gwp}. Cakupan 2 berbasis lokasi memakai faktor emisi grid resmi ESDM, data 2019 (Kepmen ESDM 163.K/HK.02/MEM.S/2021). Campuran biodiesel dihitung terpisah; CO₂ biogenik sebesar ${tt(T.bio)} t dilaporkan di luar cakupan. Total emisi: ${tt(T.total)} t CO₂e (Cakupan 1 ${tt(T.s1)} t; Cakupan 2 ${tt(T.s2)} t berbasis lokasi / ${tt(T.s2m)} t berbasis pasar; Cakupan 3 ${tt(T.s3)} t).`;
+  return `Inventarisasi emisi GRK ${o.nama || 'organisasi'} tahun ${o.tahun || '-'} disusun mengikuti GHG Protocol Corporate Standard dan ISO 14064-1:2018 dengan pendekatan batas ${BATAS[o.batas]}. Emisi dihitung dengan metode IPCC 2006 Guidelines dan 2019 Refinement (Tier 1, faktor default) sesuai acuan IPCC yang diamanatkan Permen LH/BPLH No. 7/2026, pelaksana Perpres No. 110/2025. Konversi ke CO₂e memakai GWP 100 tahun IPCC ${p.gwp}. Cakupan 2 berbasis lokasi memakai faktor emisi grid resmi ESDM, data 2019 (Kepmen ESDM 163.K/HK.02/MEM.S/2021). Campuran biodiesel dihitung terpisah; CO₂ biogenik sebesar ${tt(T.bio)} t dilaporkan di luar cakupan. Total emisi: ${tt(T.total)} t CO₂e (Cakupan 1 ${tt(T.s1)} t; Cakupan 2 ${tt(T.s2)} t berbasis lokasi / ${tt(T.s2m)} t berbasis pasar; Cakupan 3 ${tt(T.s3)} t).` +
+    (T.kebun ? ` Emisi perkebunan (${tt(T.kebun)} t CO₂e) dihitung dengan IPCC 2019 untuk tanah, pupuk, dan ternak (faktor fermentasi enterik spesifik Indonesia untuk sapi, kambing, domba), IPCC 2013 Wetlands Supplement untuk gambut, metode limbah cair IPCC (Bo 0,25 kg CH₄/kg COD), serta amortisasi linier alih guna lahan sesuai GHG Protocol Land Sector and Removals Standard.` : '') +
+    (T.removal || T.loss ? ` Serapan CO₂ biomassa tanaman sebesar ${tt(T.removal)} t dan pelepasan saat peremajaan sebesar ${tt(T.loss)} t dilaporkan terpisah dan tidak mengurangi total emisi.` : '');
 }
 function renderHasil() {
   const T = R.T, tot = T.total, ls = R.lines.filter(l => l.e.co2e || l.e.memo || l.e.bio);
   const kat = Object.keys(T.kat).filter(k => T.kat[k]).sort((a, b) => T.kat[b] - T.kat[a]);
-  const iso = [['Kategori 1 · emisi langsung', T.s1], ['Kategori 2 · energi impor (listrik)', T.s2], ['Kategori 3–6 · emisi tidak langsung lain', T.s3]];
+  const G = R.T.grp, iso = [['Kategori 1 · emisi langsung', T.s1], ['  1a pembakaran bahan bakar (stasioner & bergerak)', G.energi || 0], ['  1b emisi fugitif (refrigeran, SF₆)', G.fugitif || 0], ['  1c pertanian & perkebunan (pupuk, ternak, pembakaran)', G.tani || 0], ['  1d lahan (gambut, alih guna lahan)', G.lahan || 0], ['  1e limbah cair pengolahan', G.limbah || 0], ['Kategori 2 · energi impor (listrik)', T.s2], ['Kategori 3–6 · emisi tidak langsung lain', T.s3], ['Memo · pembuangan/serapan GRK (biomassa tanaman)', -T.removal]];
   $('#hasil').innerHTML = `<h2>${tot ? tt(tot) + ' t CO₂e' : 'Belum ada emisi tercatat'}</h2>
   <p class="mute">${esc(st.org.nama || 'Organisasi')} · tahun ${esc(st.org.tahun)} · GWP ${st.opt.gwp} · batas ${BATAS[st.org.batas]}</p>
   <div class="btns noprint"><button class="btn" data-act="copy">Salin ringkasan</button><button class="btn ghost" data-act="csv">Ekspor CSV</button><button class="btn ghost" data-act="json">Cadangkan (JSON)</button><button class="btn ghost" data-act="import">Pulihkan dari JSON</button><button class="btn ghost" data-act="print">Cetak / PDF</button></div>
   <div class="card"><header><h3>Per sumber emisi</h3></header><div class="scroll"><table class="stack"><thead><tr><th>Kategori</th><th class="n">t CO₂e</th><th class="n">Porsi</th></tr></thead><tbody>
   ${kat.map(k => `<tr><td>${esc(k)}</td><td class="n">${tt(T.kat[k])}</td><td class="n">${nf(tot ? T.kat[k] / tot * 100 : 0, 1)}%</td></tr>`).join('')}</tbody>
   <tfoot><tr><td>Total (berbasis lokasi)</td><td class="n">${tt(tot)}</td><td class="n">100%</td></tr><tr><td>Total (Cakupan 2 berbasis pasar)</td><td class="n">${tt(T.totalMarket)}</td><td></td></tr></tfoot></table></div></div>
-  <div class="card"><header><h3>Pemetaan ISO 14064-1:2018</h3></header><table class="stack"><thead><tr><th>Kategori ISO</th><th class="n">t CO₂e</th></tr></thead><tbody>${iso.map(([k, v]) => `<tr><td>${k}</td><td class="n">${tt(v)}</td></tr>`).join('')}</tbody></table></div>
+  <div class="card"><header><h3>Pemetaan ISO 14064-1:2018</h3></header><table class="stack"><thead><tr><th>Kategori ISO</th><th class="n">t CO₂e</th></tr></thead><tbody>${iso.map(([k, v]) => `<tr><td${k.startsWith('  ') ? ' style="padding-left:24px;color:var(--mute)"' : ''}>${k.trim()}</td><td class="n">${v < 0 ? '−' + tt(-v) : tt(v)}</td></tr>`).join('')}</tbody></table></div>
+  ${T.kebun || T.removal || T.loss ? kebunSumHTML() : ''}
   <div class="card"><header><h3>Rincian per baris data</h3><p>CH₄, N₂O dan HFC/SF₆ ditampilkan dalam t CO₂e.</p></header><div class="scroll"><table class="stack"><thead><tr><th>Cak.</th><th>Sumber</th><th>Aktivitas</th><th class="n">CO₂</th><th class="n">CH₄</th><th class="n">N₂O</th><th class="n">HFC/SF₆</th><th class="n">Total</th><th class="n">CO₂ bio</th></tr></thead><tbody>
   ${ls.length ? ls.map(l => `<tr><td>${l.s}</td><td>${esc(srcName(l))}${l.r.ket ? '<br><span class="small mute">' + esc(l.r.ket) + '</span>' : ''}${l.r.sumber ? '<br><span class="small mute">Sumber: ' + esc(l.r.sumber) + '</span>' : ''}</td><td>${esc(actText(l))}</td><td class="n">${tt(l.e.co2)}</td><td class="n">${tt(l.e.ch4)}</td><td class="n">${tt(l.e.n2o)}</td><td class="n">${tt(l.e.fgas)}</td><td class="n"><b>${tt(l.e.co2e)}</b></td><td class="n">${tt(l.e.bio)}</td></tr>`).join('') : '<tr><td colspan="9" class="mute">Belum ada data.</td></tr>'}
   </tbody></table></div></div>
   <div class="card"><header><h3>Pernyataan metodologi</h3><p>Siap disalin ke laporan keberlanjutan.</p></header><p>${esc(statement())}</p></div>
+  <p class="small mute print-credit">Dihitung dengan Kalkulator GRK Indonesia · dibuat oleh miftaelfahmi</p>
   <p class="note">Hasil ini perkiraan Tier 1 untuk perencanaan, pelaporan sukarela, dan persiapan MRV. Pelaporan wajib atau perdagangan karbon memerlukan verifikasi oleh lembaga terakreditasi KAN, dan bisa memerlukan faktor spesifik (Tier 2/3), misalnya NCV dari sertifikat mutu batubara.</p>`;
 }
 
@@ -628,7 +906,7 @@ function renderMetode() {
   const N = E.N2O_SET, nk = Object.keys(N);
   const nRow = (lab, key) => `<tr><td>${lab}</td>${nk.map(k => `<td class="n">${nf(N[k][key], 4).replace(/0+$/, '').replace(/,$/, '')}</td>`).join('')}</tr>`;
   $('#metode').innerHTML = `<h2>Faktor emisi &amp; dasar hukum</h2>
-  <p class="mute">Semua faktor yang dipakai aplikasi ditampilkan di sini agar dapat ditelusuri. Pembaruan terakhir: November 2026.</p>
+  <p class="mute">Semua faktor yang dipakai aplikasi ditampilkan di sini agar dapat ditelusuri. Pembaruan terakhir: November 2026. Sistem ini dibuat oleh <b>miftaelfahmi</b>.</p>
   <div class="card"><header><h3>Dasar regulasi & standar</h3></header><ol class="law">
    <li><b>Perpres No. 110 Tahun 2025</b> tentang Penyelenggaraan Instrumen Nilai Ekonomi Karbon dan Pengendalian Emisi GRK Nasional. Ditetapkan 10 Oktober 2025, menggantikan Perpres 98/2021. <a href="https://peraturan.bpk.go.id/Details/334733">JDIH BPK</a></li>
    <li><b>Permen LH/BPLH No. 7 Tahun 2026</b> tentang Penyelenggaraan NDC, berlaku 15 Juni 2026. Mewajibkan pelaku usaha melakukan inventarisasi GRK mandiri dan melapor setiap tahun paling lambat Maret. Penghitungan berpedoman pada IPCC (Tier 1–3) disertai analisis ketidakpastian dan QA/QC.</li>
@@ -637,6 +915,9 @@ function renderMetode() {
    <li><b>Permen ESDM No. 16/2022</b>: NEK subsektor pembangkit tenaga listrik (PTBAE, Tier 2), khusus untuk pembangkit.</li>
    <li><b>IPCC 2006 Guidelines</b> beserta <b>2019 Refinement</b>. Metode yang sama dipakai Indonesia dalam BTR-1 (inventaris nasional 2000–2022) ke UNFCCC. <a href="https://www.ipcc-nggip.iges.or.jp/public/2019rf/index.html">IPCC TFI</a></li>
    <li><b>GHG Protocol</b> Corporate Standard (2004), Scope 2 Guidance (2015), dan Scope 3 Standard (2011), serta <b>ISO 14064-1:2018</b>. Revisi gabungan GHG Protocol–ISO sedang disusun; konsultasi publiknya direncanakan Q2 2027. <a href="https://ghgprotocol.org/ghg-protocol-corporate-suite-standards-and-guidance-update-process">Status revisi</a></li>
+   <li><b>GHG Protocol Land Sector and Removals (LSR) Standard</b>, terbit 30 Januari 2026 (v1.1) dan efektif 1 Januari 2027. Mengatur emisi lahan dan alih guna lahan (periode penilaian 20 tahun atau sepanjang siklus tanaman, amortisasi linier). Serapan bersifat opsional dan dilaporkan terpisah. <a href="https://ghgprotocol.org/land-sector-and-removals-standard">LSR Standard</a></li>
+   <li><b>IPCC 2013 Wetlands Supplement</b>, Bab 2: faktor emisi tanah gambut terdrainase untuk iklim tropis. <a href="https://www.ipcc-nggip.iges.or.jp/public/wetlands/">IPCC</a></li>
+   <li><b>Sertifikasi ISPO</b>: Perpres No. 16/2025 dan Permentan No. 33/2025 tentang sertifikasi kelapa sawit berkelanjutan Indonesia. Hasil kalkulator dapat dipakai sebagai data pendukung; ikuti pedoman lembaga sertifikasi untuk format resminya.</li>
    <li><b>GWP 100 tahun</b>: AR5 (sesuai kerangka transparansi Persetujuan Paris) atau AR6, dari tabel GHG Protocol versi Agustus 2024. <a href="https://ghgprotocol.org/sites/default/files/2024-08/Global-Warming-Potential-Values%20%28August%202024%29.pdf">Tabel GWP</a></li>
   </ol></div>
   <div class="card"><header><h3>Rumus</h3></header>
@@ -652,7 +933,22 @@ function renderMetode() {
    <tr><td>CH₄ (fosil)</td><td class="n">${nf(g.AR5.CH4_f, 0)}</td><td class="n">${nf(g.AR6.CH4_f, 1)}</td></tr><tr><td>CH₄ (non-fosil)</td><td class="n">${nf(g.AR5.CH4_nf, 0)}</td><td class="n">${nf(g.AR6.CH4_nf, 1)}</td></tr><tr><td>N₂O</td><td class="n">${g.AR5.N2O}</td><td class="n">${g.AR6.N2O}</td></tr>${refRows}</tbody></table></div></div>
   <div class="card"><header><h3>Faktor N₂O tanah</h3></header><div class="scroll"><table class="stack"><thead><tr><th>Parameter</th>${nk.map(k => `<th class="n">${esc(N[k].nama)}</th>`).join('')}</tr></thead><tbody>
    ${nRow('EF1 pupuk sintetis', 'EF1s')}${nRow('EF1 pupuk organik', 'EF1o')}${nRow('EF4 deposisi', 'EF4')}${nRow('EF5 pencucian', 'EF5')}${nRow('Frac GASF', 'GASF')}${nRow('Frac GASM', 'GASM')}${nRow('Frac LEACH', 'LEACH')}</tbody></table></div></div>
-  <div class="card"><header><h3>Batasan</h3></header><p>Belum dicakup: emisi proses industri (semen, logam, kimia), limbah padat dan air limbah (termasuk POME), ternak, padi sawah, serta perubahan stok karbon lahan dan gambut (FOLU). Bila sumber-sumber ini signifikan bagi Anda, hitung dengan metode IPCC yang sesuai atau dengan bantuan konsultan/verifikator.</p></div>`;
+  ${kebunFactors()}
+  <div class="card"><header><h3>Batasan</h3></header><p>Belum dicakup: emisi proses industri (semen, logam, kimia), limbah padat (TPA) dan air limbah domestik, padi sawah, ternak babi dan unggas, kebakaran gambut, serta perubahan stok karbon tanah mineral. Faktor perkebunan memakai Tier 1. Untuk klaim karbon, pelaporan ISPO/RSPO, atau verifikasi, gunakan data terukur (Tier 2/3), misalnya COD POME, kadar N bahan organik, dan peta gambut.</p></div>`;
+}
+function kebunFactors() {
+  const P = E.PEAT, C = E.CROPC, Tn = E.TERNAK, Tu = E.TUTUPAN, Pu = E.PUPUK;
+  return `<div class="card"><header><h3>Perkebunan · tanah gambut terdrainase (IPCC Wetlands 2013, tropis)</h3><p>DOC ${nf(E.PEAT_DOC, 2)} t C/ha/th. Parit: ${nf(E.PEAT_DITCH, 0)} kg CH₄/ha parit/th × fraksi parit ${nf(E.PEAT_FDITCH, 2)}. CH₄ gambut, ternak, limbah cair, dan pembakaran memakai GWP CH₄ non-fosil.</p></header><div class="scroll"><table class="stack"><thead><tr><th>Penggunaan</th><th class="n">CO₂-C (t/ha/th)</th><th class="n">CH₄ (kg/ha/th)</th><th class="n">N₂O-N (kg/ha/th)</th></tr></thead><tbody>
+   ${Object.keys(P).map(k => `<tr><td>${esc(P[k].nama)}</td><td class="n">${nf(P[k].co2c, 1)}</td><td class="n">${nf(P[k].ch4, 1)}</td><td class="n">${nf(P[k].n2o, 1)}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card"><header><h3>Perkebunan · biomassa tanaman tahunan (IPCC 2019, Tabel 5.1 & 5.3)</h3><p>Lmax = stok C saat diremajakan; G = laju tumbuh; Lmean = stok C rata-rata sepanjang siklus (dipakai untuk alih guna lahan).</p></header><div class="scroll"><table class="stack"><thead><tr><th>Sistem</th><th class="n">Lmax (t C/ha)</th><th class="n">G (t C/ha/th)</th><th class="n">Lmean</th><th class="n">Siklus (th)</th></tr></thead><tbody>
+   ${Object.keys(C).filter(k => C[k].G !== null).map(k => `<tr><td>${esc(C[k].nama)}</td><td class="n">${nf(C[k].Lmax, 1)}</td><td class="n">${nf(C[k].G, 2)}</td><td class="n">${nf(C[k].Lmean, 1)}</td><td class="n">${C[k].siklus}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card"><header><h3>Perkebunan · ternak</h3><p>Fermentasi enterik sapi, kambing, dan domba: faktor spesifik Indonesia (Tier 2, hewan dewasa untuk kambing/domba). Kerbau: IPCC Tier 1. CH₄ kotoran: IPCC 2006 Asia, iklim hangat. N kotoran = laju N × bobot badan × 365. N₂O: kotoran di kebun memakai EF3PRP; kotoran ditumpuk memakai EF3 penyimpanan padat 0,005 lalu N₂O tanah saat diaplikasikan.</p></header><div class="scroll"><table class="stack"><thead><tr><th>Ternak</th><th class="n">Enterik (kg CH₄/ekor/th)</th><th class="n">Kotoran (kg CH₄/ekor/th)</th><th class="n">Laju N (kg/1000 kg/hari)</th><th class="n">Bobot bawaan (kg)</th></tr></thead><tbody>
+   ${Object.keys(Tn).map(k => `<tr><td>${esc(Tn[k].nama)}</td><td class="n">${nf(Tn[k].ent, 2)}</td><td class="n">${nf(Tn[k].mm, 2)}</td><td class="n">${nf(Tn[k].nrate, 2)}</td><td class="n">${Tn[k].bb}</td></tr>`).join('')}</tbody></table></div>
+   <p class="small mute">EF3PRP (kg N₂O-N/kg N), IPCC 2019 iklim basah: sapi/kerbau ${nf(E.N2O_SET.ipcc2019.PRPc, 3)}, kambing/domba ${nf(E.N2O_SET.ipcc2019.PRPs, 3)}. IPCC 2006: ${nf(E.N2O_SET.ipcc2006.PRPc, 2)} / ${nf(E.N2O_SET.ipcc2006.PRPs, 2)}.</p></div>
+  <div class="card"><header><h3>Perkebunan · limbah cair</h3><p>CH₄ = COD × Bo (0,25 kg CH₄/kg COD) × MCF − metana yang ditangkap × efisiensi pemusnahan. MCF: kolam anaerob dalam 0,8; dangkal 0,2; digester 0,8; aerobik 0. Efisiensi pemusnahan: flare terbuka 50%, flare tertutup 90% (alat metodologi CDM), dimanfaatkan mesin/boiler 100%. Nilai bawaan POME: ${nf(E.LIMBAH.pome.m3, 2)} m³/t TBS (kisaran literatur 0,5–0,7) dan COD ${E.LIMBAH.pome.cod} kg/m³ (MPOB). Ganti dengan data pengukuran pabrik.</p></header></div>
+  <div class="card"><header><h3>Perkebunan · alih guna lahan</h3><p>Emisi = luas × (stok C sebelum − Lmean tanaman) × 44/12, dibagi linier: bobot tahun ke-k = (2(N−k)−1)/N². Stok sebelum = biomassa atas permukaan FREL Indonesia × fraksi C ${nf(E.CF_C, 2)}. Nilainya dari dokumen pelaporan penurunan emisi FCPF Kalimantan Timur (2022); ganti dengan nilai regional bila ada.</p></header><div class="scroll"><table class="stack"><thead><tr><th>Tutupan sebelumnya</th><th class="n">AGB (t bk/ha)</th><th class="n">t C/ha</th></tr></thead><tbody>
+   ${Object.keys(Tu).filter(k => Tu[k].agb !== null).map(k => `<tr><td>${esc(Tu[k].nama)}</td><td class="n">${nf(Tu[k].agb, 2)}</td><td class="n">${nf(Tu[k].agb * E.CF_C, 1)}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card"><header><h3>Perkebunan · pupuk & pembakaran</h3><p>Kadar N: ${Object.keys(Pu).filter(k => Pu[k].N).map(k => esc(Pu[k].nama)).join('; ')}. Emisi produksi urea ${nf(Pu.urea.up, 3)} kg CO₂e/kg (EPD Pupuk Sriwidjaja, cradle-to-gate, berlaku sampai 2028) masuk Cakupan 3 kategori 1. Pembakaran terbuka: CH₄ ${nf(E.BAKAR.ch4, 1)} dan N₂O ${nf(E.BAKAR.n2o, 2)} g/kg bahan kering. Daun tebu ${nf(E.BAKAR.tebuMB, 1)} t bk/ha × faktor pembakaran ${nf(E.BAKAR.tebuCF, 2)} (IPCC 2006 Vol.4 Tabel 2.4–2.6).</p></header></div>`;
 }
 
 /* ---------- tab ---------- */
@@ -663,9 +959,9 @@ function setTab(t) {
   if (t === 'hasil') renderHasil();
 }
 function renderBanner() {
-  $('#sampleBanner').innerHTML = st.sample ? `<div class="banner"><span>Ini data contoh usaha pengolahan rempah. Ganti dengan data Anda atau mulai dari kosong.</span><button class="btn" data-act="clear">Mulai dari kosong</button><button class="btn" data-act="keep">Pakai sebagai titik awal</button></div>` : '';
+  $('#sampleBanner').innerHTML = st.sample ? `<div class="banner"><span>Ini data contoh usaha kebun &amp; pengolahan pala. Ganti dengan data Anda atau mulai dari kosong.</span><button class="btn" data-act="clear">Mulai dari kosong</button><button class="btn" data-act="keep">Pakai sebagai titik awal</button></div>` : '';
 }
-function renderAll() { renderProfil(); Object.keys(SEC).forEach(renderSec); renderMetode(); renderBanner(); refresh(); setTab(tab); }
+function renderAll() { renderProfil(); renderKebun(); Object.keys(SEC).forEach(renderSec); renderMetode(); renderBanner(); refresh(); setTab(tab); }
 
 /* ---------- ekspor ---------- */
 function showModal(title, text, file, mime) {
@@ -704,7 +1000,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modal').
 $('#mCopy').onclick = async () => { const t = $('#mText'); try { await navigator.clipboard.writeText(t.value); $('#mMsg').textContent = 'Tersalin.'; } catch (e) { t.removeAttribute('readonly'); t.select(); try { document.execCommand('copy'); $('#mMsg').textContent = 'Tersalin.'; } catch (x) { $('#mMsg').textContent = 'Pilih teks lalu salin manual.'; } t.setAttribute('readonly', ''); } };
 $('#fileIn').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return; const rd = new FileReader();
-  rd.onload = () => { try { const d = JSON.parse(rd.result); if (!d || !d.opt || !d.org) throw 0; const b = blank(); st = Object.assign(b, d); ['stat', 'mob', 'ref', 'agri', 'elec', 's3'].forEach(k => { if (!Array.isArray(st[k])) st[k] = []; }); st.sample = false; save(); renderAll(); setTab('hasil'); } catch (x) { showModal('Gagal memulihkan', 'Berkas bukan cadangan Kalkulator GRK yang valid.', 'x.txt', 'text/plain'); } };
+  rd.onload = () => { try { const d = JSON.parse(rd.result); if (!d || !d.opt || !d.org) throw 0; st = migrate(Object.assign(blank(), d)); st.sample = false; save(); renderAll(); setTab('hasil'); } catch (x) { showModal('Gagal memulihkan', 'Berkas bukan cadangan Kalkulator GRK yang valid.', 'x.txt', 'text/plain'); } };
   rd.readAsText(f); e.target.value = '';
 });
 function setVal(t) {
@@ -723,6 +1019,7 @@ document.addEventListener('change', ev => {
     if (k === 'fuel') { const f = E.FUELS[r.fuel]; if (f.units.indexOf(r.unit) < 0) r.unit = f.units[0]; if (!f.blend) r.blend = 0; else if (f.blend === 'fame' && !BLEND_D.some(b => b[0] === +r.blend && b[0] > 0)) r.blend = blendFor(st.org.tahun); else if (f.blend === 'etanol' && +r.blend !== 5) r.blend = 0; }
     renderSec(sec);
   }
+  if (sec === 'kebun' && k === 'kom') renderKebun();
   save(); refresh();
 });
 

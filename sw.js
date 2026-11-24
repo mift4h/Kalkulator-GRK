@@ -1,5 +1,5 @@
-/* Service worker Kalkulator GRK v1.0.0: bekerja offline (cache-first untuk berkas aplikasi) */
-const CACHE = 'grk-v1.0.0';
+/* Service worker Kalkulator GRK v1.2.0: bekerja offline (cache-first untuk berkas aplikasi) */
+const CACHE = 'grk-v1.2.0';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-192.png', './icons/maskable-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
